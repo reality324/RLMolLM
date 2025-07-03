@@ -2,8 +2,6 @@
 
 This repository contains code for training and evaluating molecular generation models using reinforcement learning approaches. The framework supports both scaffold-based and non-scaffold molecular generation with various training configurations.
 
-**Note**: While the codebase includes GAN components (generator and discriminator), only the **generator** is used in practice due to mode collapse issues commonly encountered with GANs in molecular generation. The training focuses on language model approaches with optional reinforcement learning enhancement.
-
 ## Table of Contents
 - [Installation](#installation)
 - [Project Structure](#project-structure)
@@ -234,3 +232,7 @@ inference_output/
         ├── alm_ppo_valid_unique_only_1.csv
         └── ...
 ```
+
+## Technical Notes
+
+**GAN Architecture**: While the codebase includes GAN components (generator and discriminator), only the **generator** is used in practice due to mode collapse issues commonly encountered with GANs in molecular generation. The training focuses on language model approaches with optional reinforcement learning enhancement.
