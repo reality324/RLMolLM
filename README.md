@@ -32,6 +32,18 @@ conda activate rlmollm-env
 pip install -r requirements.txt
 ```
 
+### 3. Download Required Model Files
+
+Due to file size limitations, some large files are hosted separately:
+
+**Model Weights (209MB):**
+- Download from: [To be uploaded to Hugging Face Hub]
+- Extract to: `model_weights/`
+
+**Tokenizer Files (332KB):**
+- Download from: [To be uploaded to Hugging Face Hub or GitHub Releases]
+- Extract to: `tokenizer/`
+
 **Note**: This project requires Python 3.11.11 and specific package versions as listed in `requirements.txt`. The main dependencies include:
 - PyTorch 2.4.0
 - Transformers 4.50.0

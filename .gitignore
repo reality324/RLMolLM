@@ -15,6 +15,7 @@ tokenizer/
 # Project-specific files to exclude
 extract_smiles.py
 note.txt
+check_validity.py
 
 # Docker-related files
 Dockerfile*
