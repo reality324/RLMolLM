@@ -10,10 +10,7 @@ BASE_SCAFFOLD="no_scaffold_2_random"
 # Mutation folders to analyze (subfolders under BASE_SCAFFOLD)
 MUTATION_FOLDERS=(
     "1m"        # Default case (mutation parameter = 1)
-    # "0p8m"      # 0.8 mutation parameter case
     # "0p7m"      # 0.7 mutation parameter case
-    # "0p6m"      # 0.6 mutation parameter case
-    # "0p5m"      # 0.5 mutation parameter case
 )
 
 # Number of samples per method (for error bar calculation)

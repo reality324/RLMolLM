@@ -6,14 +6,9 @@
 
 # Scaffold configurations to analyze
 SCAFFOLD_KEYS=(
-    # "scaffold_1_acry"
-    # "scaffold_2_indole"
-    # "scaffold_3_biphe"
-    # "scaffold_4"
-    # "scaffold_5_male"
     "scaffold_6_benzene"
-    "scaffold_7_dihydropyridine"
-    "scaffold_8_benzothiophene"
+    # "scaffold_7_dihydropyridine"
+    # "scaffold_8_benzothiophene"
 )
 
 # Number of samples per method (for error bar calculation)

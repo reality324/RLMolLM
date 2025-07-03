@@ -104,6 +104,29 @@ Each step has two variants:
 - **Non-scaffold (`_ns_random`)**: Generates molecules without scaffold constraints (unconstrained)
 - **Scaffold-based (`_s`)**: Uses molecular scaffolds as constraints
 
+### Script Configuration
+
+All shell scripts contain a **"CONFIGURABLE VARIABLES (Edit here)"** section where you can customize:
+
+- **Model Selection**: Choose which training methods to use via `CONFIG_KEYS` array
+- **Training Parameters**: Epochs, population size, mutation rates, etc.
+- **Output Directories**: Customize where results are saved
+- **Scaffold Selection**: For scaffold-based workflows
+
+**Available Model Types**:
+```bash
+CONFIG_KEYS=(
+    "alm_ppo"    # Adaptive Language Model (adaptive genetic algo) with PPO RL
+    "alm"        # Adaptive Language Model (adaptive genetic algo)
+    "lm_ppo"     # Language Model with PPO RL and genetic algo
+    "lm_ng_ppo"  # Language Model with PPO RL but no genetic algo
+    "lm"         # Language Model with genetic algo (no weight updates)
+    "lm_ng"      # Language Model with no genetic algo (no weight updates)
+)
+```
+
+**Note**: `lm`/`lm_ng` models have no weight updates during training - only elite population selection differs.
+
 ## Step 1: Generate Initial Population
 
 Before training, you need to generate an initial population of molecules or use your own dataset.
@@ -137,20 +160,19 @@ Train molecular generation models with various configurations.
 ./train_all_ns_random.sh
 ```
 
-This script trains models with different mutation parameters (1.0, 0.8, 0.7, 0.6, 0.5) and the same set of training methods.
+This script trains models with different mutation parameters (1.0, 0.8, 0.7, 0.6, 0.5) and configurable training methods. You can select which models to train by editing the `CONFIG_KEYS` array in the script (same options as scaffold-based training above).
+
+**Customization**: Edit the configurable variables in the "CONFIGURABLE VARIABLES (Edit here)" section, including:
+- `CONFIG_KEYS`: Select which training methods to use
+- `MUTATION_RATES`: Adjust mutation parameters for exploration vs exploitation
+- Other training parameters like epochs, population size, etc.
 
 ### For Scaffold-based Training (Constrained):
 ```bash
 ./train_all_s.sh
 ```
 
-This script trains models for multiple scaffolds with different methods:
-- **ALM-RL (PPO)**: Augmented Language Model with Reinforcement Learning
-- **ALM**: Augmented Language Model only
-- **LM-RL (PPO)**: Language Model with Reinforcement Learning
-- **LM-NG-RL (PPO)**: Language Model No-merge with RL
-- **LM**: Standard Language Model
-- **LM-NG**: Language Model No-merge
+This script trains models for multiple scaffolds with different methods. You can configure which models to train by editing the `CONFIG_KEYS` array and other parameters in the "CONFIGURABLE VARIABLES (Edit here)" section of the script.
 
 
 ## Step 3: Inference

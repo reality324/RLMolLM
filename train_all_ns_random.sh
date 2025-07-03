@@ -19,14 +19,11 @@ INITIAL_POPULATION="${INITIAL_POPULATION_DIR}/${INITIAL_POPULATION_FILE}"
 # Format: "suffix:parameter" - suffix will be appended to output directory name
 MUTATION_CASES=(
     "_1m:1"        # Default case (mutation parameter = 1)
-    "_0p8m:0.8"    # 0.8 mutation parameter case
-    "_0p7m:0.7"    # 0.7 mutation parameter case
-    "_0p6m:0.6"    # 0.6 mutation parameter case
-    "_0p5m:0.5"    # 0.5 mutation parameter case
+    # "_0p7m:0.7"    # 0.7 mutation parameter case
 )
 
 # Config file to use
-CONFIG_FILE="./config/no_scaffold_2.json"
+CONFIG_FILE="./config/no_scaffold_2_random.json"
 
 # Base common arguments shared by all configurations
 BASE_ARGS=(

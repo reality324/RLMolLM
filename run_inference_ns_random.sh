@@ -11,10 +11,7 @@ BASE_SCAFFOLD="no_scaffold_2_random"
 # Format: "suffix:parameter" - suffix will be appended to output directory name
 MUTATION_CASES=(
     "_1m:1"        # Default case (mutation parameter = 1)
-    # "_0p8m:0.8"    # 0.8 mutation parameter case
-    "_0p7m:0.7"    # 0.7 mutation parameter case
-    "_0p6m:0.6"    # 0.6 mutation parameter case
-    "_0p5m:0.5"    # 0.5 mutation parameter case
+    # "_0p7m:0.7"    # 0.7 mutation parameter case
 )
 
 # Number of samples per method (for error bar calculation)

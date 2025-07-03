@@ -2,23 +2,13 @@
 
 # Define scaffold configurations in order
 SCAFFOLD_KEYS=(
-    # "scaffold_1_acry"
-    # "scaffold_2_indole"
-    # "scaffold_3_biphe"
-    # "scaffold_4"
-    "scaffold_5_male"
     "scaffold_6_benzene"
-    "scaffold_7_dihydropyridine"
-    "scaffold_8_benzothiophene"
+    # "scaffold_7_dihydropyridine"
+    # "scaffold_8_benzothiophene"
 )
 
 # Define scaffold names
 declare -A SCAFFOLD_NAMES=(
-    ["scaffold_1_acry"]="Acrylamide"
-    ["scaffold_2_indole"]="Indole"
-    ["scaffold_3_biphe"]="Biphenyl"
-    ["scaffold_4"]="Scaffold 4"
-    ["scaffold_5_male"]="Male"
     ["scaffold_6_benzene"]="Benzene"
     ["scaffold_7_dihydropyridine"]="dihydropyridine"
     ["scaffold_8_benzothiophene"]="benzothiophene"
