@@ -10,7 +10,6 @@ api/
 .vscode/
 analysis/plots/
 analysis/logs/
-tokenizer/
 
 # Project-specific files to exclude
 extract_smiles.py
