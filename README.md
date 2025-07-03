@@ -125,7 +125,7 @@ CONFIG_KEYS=(
 )
 ```
 
-**Note**: `lm`/`lm_ng` models have no weight updates during training - only elite population selection differs.
+**Note**: `lm`/`lm_ng` models have no weight updates during training - only maintained elite population differs.
 
 ## Step 1: Generate Initial Population
 
