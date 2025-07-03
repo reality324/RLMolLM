@@ -46,7 +46,7 @@ Due to file size limitations, some large files are hosted separately:
 - PyTorch 2.4.0
 - Transformers 4.50.0
 - RDKit 2024.3.3
-- ADMET-AI 1.3.1 (planned for future implementation)
+- ADMET-AI 1.3.1 (ADMET features in development)
 - UMAP-learn 0.5.7
 
 ## Project Structure
@@ -67,7 +67,7 @@ Due to file size limitations, some large files are hosted separately:
 │   └── logs/                  # Analysis logs
 ├── scoring/                    # Molecular scoring functions
 │   ├── molecule_scoring.py     # Core scoring functions
-│   ├── admet_scoring.py       # ADMET property scoring (future implementation)
+│   ├── admet_scoring.py       # Molecular scoring with ADMET features in development
 │   └── scoring_interface.py   # Scoring interface
 ├── utils/                      # Utility functions
 │   ├── util.py                # Core utilities
