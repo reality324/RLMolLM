@@ -235,4 +235,4 @@ inference_output/
 
 ## Technical Notes
 
-**GAN Architecture**: While the codebase includes GAN components (generator and discriminator), only the **generator** is used in practice due to mode collapse issues commonly encountered with GANs in molecular generation. The training focuses on language model approaches with optional reinforcement learning enhancement.
+**No GAN Model Used**: While the codebase includes GAN components (generator and discriminator), no GAN training is performed due to mode collapse issues commonly encountered with GANs in molecular generation. The framework focuses on language model approaches with optional reinforcement learning enhancement.
