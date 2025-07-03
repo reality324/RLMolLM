@@ -225,7 +225,7 @@ Analyze the generated molecules and create visualizations.
 **Analysis Outputs**:
 - **Property distributions**: SA, QED, LogP, fitness.
 - **UMAP visualizations**: 2D projections of molecular chemical space
-- **Validity and uniqueness statistics**: Error bars across multiple runs
+- **Validity and uniqueness statistics**
 
 ## Configuration
 
