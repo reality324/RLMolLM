@@ -1,0 +1,6 @@
+1. acrylamides: C=CC(=O)N
+    #C=CC(=O)N# min
+
+indole: c1c(#)cc2[nH]c(#)cc2c1#
+biphenyltetrazole: #c1ccc(-c2ccccc2-c2nn[nH]n2)cc1
+scaffoldGPT used: O=c1[nH]c(Nc2cc(#)cc(#)c2)nnc1-c1ccc(#)cc1

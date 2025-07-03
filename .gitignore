@@ -1,0 +1,61 @@
+# Directories to exclude
+model_weights/
+play_try/
+training_output/
+training_output*/
+inference_output/
+latex/
+inference/
+api/
+.vscode/
+analysis/plots/
+analysis/logs/
+
+# Docker-related files
+Dockerfile*
+docker-compose*.yml
+nginx.conf
+
+# Python cache and temporary files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+.pytest_cache/
+.coverage
+*.egg-info/
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# Environment files
+.env
+.venv
+env/
+venv/
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE files
+*.swp
+*.swo
+*~
+
+# Log files
+*.log
+
+# Data files that might be large
+*.csv
+*.pkl
+*.pickle
+*.h5
+*.hdf5 
