@@ -35,10 +35,24 @@ pip install -r requirements.txt
 Due to file size limitations, some large files are hosted separately:
 
 **Model Weights (209MB):**
-- Download from: [To be uploaded to Hugging Face Hub]
-- Extract to: `model_weights/`
+The pre-trained model weights are hosted on a private Hugging Face repository and can be downloaded automatically using our download script.
 
+**🚀 Easy Download:**
+```bash
+# Run the download script - it handles everything automatically!
+python download_script/download_model_weights.py
+```
 
+**What the script does:**
+- ✅ Automatically installs `huggingface_hub` if needed
+- ✅ Creates `model_weights/` directory if it doesn't exist  
+- ✅ Downloads `pytorch_model.bin` (208MB) and `config.json` (565B)
+- ✅ Verifies file integrity and sizes
+- ✅ Skips files that already exist
+
+**Manual Details:**
+- **Repository**: `scofieldlinlin/rlmollm-models` (Private)
+- **Access Token**: Embedded in download script
 
 **Note**: This project requires Python 3.11.11 and specific package versions as listed in `requirements.txt`. The main dependencies include:
 - PyTorch 2.4.0
