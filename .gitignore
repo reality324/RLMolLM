@@ -12,6 +12,10 @@ analysis/plots/
 analysis/logs/
 tokenizer/
 
+# Project-specific files to exclude
+extract_smiles.py
+note.txt
+
 # Docker-related files
 Dockerfile*
 docker-compose*.yml
