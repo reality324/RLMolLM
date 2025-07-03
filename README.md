@@ -1,4 +1,4 @@
-# RLMolLM: Reinforcement Learning-Enhanced Language Model Framework for Inverse Molecular
+# RLMolLM: Reinforcement Learning-Enhanced Language Model Framework for Inverse Molecular Design
 
 This repository contains code for training and evaluating molecular generation models using reinforcement learning approaches. The framework supports both scaffold-based and non-scaffold molecular generation with various training configurations.
 
@@ -38,9 +38,7 @@ Due to file size limitations, some large files are hosted separately:
 - Download from: [To be uploaded to Hugging Face Hub]
 - Extract to: `model_weights/`
 
-**Tokenizer Files (332KB):**
-- Download from: [To be uploaded to Hugging Face Hub or GitHub Releases]
-- Extract to: `tokenizer/`
+
 
 **Note**: This project requires Python 3.11.11 and specific package versions as listed in `requirements.txt`. The main dependencies include:
 - PyTorch 2.4.0
