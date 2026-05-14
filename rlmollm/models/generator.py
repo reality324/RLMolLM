@@ -21,23 +21,41 @@ class Generator(torch.nn.Module):
         self.embedding = None
 
         if saved_weights is not None:
-            # Load from local checkpoint with bert.xxx format
+            # Load from local checkpoint
             config = transformers.AutoConfig.from_pretrained(model_directory)
             self.embedding = transformers.AutoModelForMaskedLM.from_config(config)
-            # Load weights - checkpoint uses 'bert.xxx' format
             state_dict = torch.load(saved_weights, map_location='cpu', weights_only=False)
             
-            # Check if checkpoint uses 'bert.xxx' format and needs prefix
+            # Check checkpoint format:
+            # - gen.embedding (AutoModelForMaskedLM) uses 'bert.xxx' format internally
+            # - gen.state_dict() adds 'embedding.' prefix automatically
             first_key = next(iter(state_dict.keys()), "")
-            if first_key.startswith('bert.'):
-                # Add 'embedding.' prefix to match BertForMaskedLM state_dict format
-                print(f"Adding 'embedding.' prefix to checkpoint keys...")
+            
+            if first_key.startswith('embedding.'):
+                # Checkpoint has 'embedding.' prefix -> need to REMOVE it to match gen.embedding format
+                print(f"Removing 'embedding.' prefix from checkpoint keys...")
                 new_state_dict = {}
                 for key, value in state_dict.items():
-                    new_state_dict['embedding.' + key] = value
+                    if key.startswith('embedding.'):
+                        new_state_dict[key[len('embedding.'):]] = value
+                    else:
+                        new_state_dict[key] = value
                 self.embedding.load_state_dict(new_state_dict, strict=False)
-            else:
+            elif first_key.startswith('bert.'):
+                # Checkpoint already in 'bert.xxx' format -> load directly
                 self.embedding.load_state_dict(state_dict, strict=False)
+            else:
+                # _sep_token_tensor at top level (from Generator.save format)
+                # Need to extract just the embedding part
+                print(f"Extracting embedding weights from Generator format checkpoint...")
+                new_state_dict = {}
+                for key, value in state_dict.items():
+                    if key.startswith('embedding.'):
+                        new_state_dict[key[len('embedding.'):]] = value
+                if len(new_state_dict) > 0:
+                    self.embedding.load_state_dict(new_state_dict, strict=False)
+                else:
+                    print(f"WARNING: No embedding weights found in checkpoint!")
             print(f"Loaded weights from {saved_weights}")
         elif random_init:
             config = transformers.AutoConfig.from_pretrained(model_directory)

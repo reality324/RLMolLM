@@ -1,0 +1,22 @@
+{
+    "gan_operators": [
+        {
+            "model_directory": "ibm/MoLFormer-XL-both-10pct",
+            "checkpoint_path": "/home/tianwangcong/RLMolLM/assets/models/moses_pretrained_fixed.pt",
+            "tokenizer_directory": "/home/tianwangcong/RLMolLM/tokenizer",
+            "num_steps": 1
+        }
+    ],
+    "scoring_operator": {
+        "scoring_names": ["number"],
+        "scoring_liten_names": ["ROA", "Respiratory", "logP"],
+        "scoring_admet_names": [],
+        "scoring_tdc_names": [],
+        "liten": {
+            "base_path": "/home/tianwangcong/LiTEN-ADMET",
+            "ckpt_dir": "/home/tianwangcong/LiTEN-ADMET/ckpt/best_models_all",
+            "conf_json": "/home/tianwangcong/LiTEN-ADMET/config/config.json",
+            "batch_size": 32
+        }
+    }
+}

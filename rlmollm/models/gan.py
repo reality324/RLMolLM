@@ -67,20 +67,26 @@ class Gan:
         if saved_generator != None:
             # Load generator weights
             state_dict = torch.load(saved_generator, map_location=self._device, weights_only=False)
-
-            # Check if weights are in 'bert.xxx' format (from fixed checkpoint)
-            # vs 'embedding.xxx' format (from Generator.state_dict())
+            
             first_key = next(iter(state_dict.keys()), "")
-            if first_key.startswith('bert.'):
-                # Fixed checkpoint format: 'bert.xxx' -> load to embedding directly
-                print(f"Loading fixed checkpoint format (bert.xxx) to embedding...")
-                self._gen.embedding.load_state_dict(state_dict)
-            elif first_key.startswith('embedding.'):
-                # Original Generator format: 'embedding.xxx' -> load to full generator
+            
+            if first_key.startswith('embedding.'):
+                # Checkpoint has 'embedding.' prefix -> already in Generator format, load directly
+                print(f"Loading Generator with embedding prefix format...")
                 self._gen.load_state_dict(state_dict)
+            elif first_key.startswith('bert.'):
+                # BERT format already loaded in Generator.__init__ via saved_weights
+                print(f"BERT format checkpoint already loaded in Generator, skipping...")
             else:
-                # Unknown format, try direct load
-                self._gen.load_state_dict(state_dict)
+                # _sep_token_tensor at top level or other format
+                # Check if embedding weights exist
+                has_embedding = any(k.startswith('embedding.') for k in state_dict.keys())
+                if has_embedding:
+                    # Has embedding.xxx format, load directly
+                    print(f"Loading Generator with Generator format checkpoint...")
+                    self._gen.load_state_dict(state_dict)
+                else:
+                    print(f"No embedding weights found, skipping...")
 
         # note: this will fail if it conflicts with generator_only
         if saved_discriminator != None:
