@@ -48,8 +48,13 @@ class Gan:
             self._tokenizer = transformers.AutoTokenizer.from_pretrained(tokenizer_directory, use_auth_token=True)
         self._tokenizer.backend_tokenizer.pre_tokenizer = pretokenizer_dict[tokenizer_type]
         
+        # IMPORTANT: Fix normalizer to preserve SMILES case
+        # Default BertNormalizer has lowercase=True which breaks SMILES
+        from tokenizers.normalizers import NFD, StripAccents, Sequence
+        self._tokenizer.backend_tokenizer.normalizer = Sequence([NFD(), StripAccents()])
+        
         # allows case with only generator for evaluation
-        self._gen = Generator(model_directory, self._tokenizer, random_init).to(self._device)
+        self._gen = Generator(model_directory, self._tokenizer, random_init, saved_generator).to(self._device)
         self._disc = None
         self._optimizer_disc = None
         self._optimizer_gen = None

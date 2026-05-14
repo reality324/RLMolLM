@@ -356,9 +356,12 @@ class RLMolLMGenerator:
             print(f"  Loading population from: {data_file}")
         
         population.read_population_dict_from_file(data_file, population_size)
-        all_smiles = set(population.population_sequences)
         
-        # Auto-convert chiral molecules to non-chiral for optimization
+        # Store initial size before any modifications
+        initial_size = len(population.population_sequences)
+        
+        # CRITICAL: Auto-convert chiral molecules BEFORE population expansion
+        # This ensures all copies use the non-chiral version
         original_chiral_count = 0
         if auto_convert_chiral:
             converted_count = 0
@@ -382,10 +385,45 @@ class RLMolLMGenerator:
                 if self.verbose:
                     print(f"  检测到 {original_chiral_count} 个手性分子，已转换为非手性版本")
                 population._population_dict[population._data_column_name] = new_sequences
-                all_smiles = set(new_sequences)
+                
+                # Re-expand population with non-chiral molecules (fill or trim to desired size)
+                # This will copy the non-chiral versions
+                if len(new_sequences) > 0:
+                    current_size = len(population._population_dict[population._data_column_name])
+                    if current_size < population_size:
+                        copy_indices = np.random.choice(current_size, population_size - current_size)
+                        for idx in copy_indices:
+                            for key in population._column_names:
+                                population._population_dict[key].append(population._population_dict[key][idx])
+                        if self.verbose:
+                            print(f"  Expanded population to {population_size} with non-chiral molecules")
+                    elif current_size > population_size:
+                        selected_indices = np.random.choice(current_size, population_size, replace=False)
+                        for key in population._column_names:
+                            population._population_dict[key] = [population._population_dict[key][i] for i in selected_indices]
+                        if self.verbose:
+                            print(f"  Trimmed population to {population_size} non-chiral molecules")
+                
+                # Re-score the entire population with non-chiral SMILES
+                if self.verbose:
+                    print("  重新计算非手性分子的属性值...")
+                from rdkit import Chem
+                non_chiral_smiles = population._population_dict[population._data_column_name]
+                mols = [Chem.MolFromSmiles(smi) for smi in non_chiral_smiles]
+                mols = [m for m in mols if m is not None]  # Filter invalid
+                if len(mols) > 0:
+                    new_pop_dict = scoring_operator.generate_scores(mols)
+                    # Update population dict with new scores
+                    for key in new_pop_dict:
+                        population._population_dict[key] = new_pop_dict[key]
+                    if self.verbose:
+                        print(f"  已重新计算 {len(mols)} 个非手性分子的属性值")
+        
+        # Initialize all_smiles set from current population (after potential conversion)
+        all_smiles = set(population.population_sequences)
         
         if self.verbose:
-            print(f"  Initial population: {len(all_smiles)} molecules")
+            print(f"  Initial population: {len(all_smiles)} unique molecules")
         
         if self.verbose:
             print(f"\nRunning optimization for {generations} generations...")
@@ -478,6 +516,11 @@ class RLMolLMGenerator:
         property_name_mapping = {
             'logp': 'logP',
             'logd': 'logD',
+            'qed': 'drug',
+            'roa': 'ROA',
+            'respiratory': 'Respiratory',
+            'herg': 'hERG_Blockers',
+            'ames': 'AMES_Mutagenicity',
         }
 
         rdkit_props_in_targets = []

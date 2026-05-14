@@ -24,9 +24,20 @@ class Generator(torch.nn.Module):
             # Load from local checkpoint with bert.xxx format
             config = transformers.AutoConfig.from_pretrained(model_directory)
             self.embedding = transformers.AutoModelForMaskedLM.from_config(config)
-            # Load weights directly (bert.xxx format matches BertForMaskedLM structure)
+            # Load weights - checkpoint uses 'bert.xxx' format
             state_dict = torch.load(saved_weights, map_location='cpu', weights_only=False)
-            self.embedding.load_state_dict(state_dict)
+            
+            # Check if checkpoint uses 'bert.xxx' format and needs prefix
+            first_key = next(iter(state_dict.keys()), "")
+            if first_key.startswith('bert.'):
+                # Add 'embedding.' prefix to match BertForMaskedLM state_dict format
+                print(f"Adding 'embedding.' prefix to checkpoint keys...")
+                new_state_dict = {}
+                for key, value in state_dict.items():
+                    new_state_dict['embedding.' + key] = value
+                self.embedding.load_state_dict(new_state_dict, strict=False)
+            else:
+                self.embedding.load_state_dict(state_dict, strict=False)
             print(f"Loaded weights from {saved_weights}")
         elif random_init:
             config = transformers.AutoConfig.from_pretrained(model_directory)
