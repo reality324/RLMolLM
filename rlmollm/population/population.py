@@ -64,6 +64,16 @@ class Population():
         # Initialize PPO trainer if needed
         self._ppo_trainer = None
 
+    def _has_fitness_column(self):
+        """Check if population dict has fitness column.
+        
+        Returns:
+            bool: True if fitness column exists in population dict
+        """
+        return (len(self._population_dict) > 0 and 
+                self._fitness_column_name in self._population_dict and
+                len(self._population_dict[self._fitness_column_name]) > 0)
+
     @property
     def population_dict(self):
         """Get population dictionary.
@@ -329,8 +339,8 @@ class Population():
 
         # population size is maintained by the merge
         selection_index = None
-        if len(self._scoring_operator.selection_names) < 1:
-            # After merge, select from the current (merged) population size
+        if not self._has_fitness_column():
+            # After merge, select from the current (merged) population size randomly
             current_population_size = len(self._population_dict[self._data_column_name])
             selection_index = np.random.choice(current_population_size, cutoff_size, replace=False)
         else:
@@ -407,7 +417,7 @@ class Population():
             List[str] with sampled sequences from data column of population dict
 
         """
-        if weighted:
+        if weighted and self._has_fitness_column():
             # softmax weights from fitness
             weights = np.exp(self._population_dict[self._fitness_column_name])
             weights /= np.sum(weights)

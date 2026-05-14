@@ -5,6 +5,7 @@ import re
 import os
 import csv
 from datetime import datetime
+from pathlib import Path
 import random
 import sys
 
@@ -205,34 +206,61 @@ def initialize_gan_operators(config, device, mutation_parameter_list, args):
         
         # Create a copy of operator_config to modify
         config_copy = operator_config.copy()
-        
+
+        # Resolve tokenizer_directory: convert relative paths to absolute
+        # The tokenizer lives at <RLMolLM>/tokenizer/ relative to the package
+        package_root = Path(__file__).parent.parent
+        tokenizer_dir = config_copy.get("tokenizer_directory", "")
+        if not tokenizer_dir or not os.path.isabs(tokenizer_dir):
+            # Relative path or empty — resolve to absolute
+            resolved = str(package_root / "tokenizer")
+            print(f"Resolving tokenizer_directory '{tokenizer_dir}' -> '{resolved}'")
+            config_copy["tokenizer_directory"] = resolved
+
         # Check if model_directory is invalid (not a local path or valid HF model)
         # In this case, use tokenizer directory which has valid config.json
         model_dir = config_copy.get('model_directory', '')
-        if model_dir and not os.path.exists(model_dir):
-            # model_directory doesn't exist locally, might be invalid
-            # Check if there's a saved_generator (pretrained weights)
+        
+        # Check if model_directory has the required model weights file
+        has_weights = (
+            os.path.exists(os.path.join(model_dir, 'pytorch_model.bin')) or
+            os.path.exists(os.path.join(model_dir, 'model.safetensors'))
+        )
+        
+        use_random_init = False
+        if model_dir and not has_weights:
+            # model_directory doesn't have weights, use tokenizer + saved_generator
             if config_copy.get('saved_generator'):
-                print(f"model_directory '{model_dir}' not found locally")
+                print(f"model_directory '{model_dir}' missing weights")
                 print("Using tokenizer directory for model structure with saved weights...")
-                config_copy['model_directory'] = 'tokenizer'
+                # Check for local MoLFormer config in tokenizer directory
+                molformer_config = os.path.join(
+                    config_copy.get('tokenizer_directory', 'tokenizer'),
+                    'models--ibm--MoLFormer-XL-both-10pct', 'snapshots', 'default'
+                )
+                if os.path.exists(molformer_config):
+                    # Use local MoLFormer config for offline mode
+                    config_copy['model_directory'] = molformer_config
+                    print(f"  Using local MoLFormer config: {molformer_config}")
+                else:
+                    config_copy['model_directory'] = 'tokenizer'
                 # Use random_init=True to create model from config, then load saved weights
-                args.random_init = True
+                use_random_init = True
         elif model_dir.endswith('.pt') and os.path.exists(model_dir):
             # Legacy case: model_directory points directly to a .pt file
             print(f"Detected .pt file in model_directory: {model_dir}")
             print("Using tokenizer directory with saved generator weights...")
             config_copy['model_directory'] = 'tokenizer'
             config_copy['saved_generator'] = model_dir
-            args.random_init = True
-            
+            use_random_init = True
+        
         gan_operators.append(
             Gan(**config_copy,
                 mutation_parameter=mutation_param, 
                 lr=args.lr, 
                 generator_only=args.generator_only, 
                 top_k=args.top_k, 
-                random_init=args.random_init)
+                random_init=use_random_init)
         )
     
     return gan_operators

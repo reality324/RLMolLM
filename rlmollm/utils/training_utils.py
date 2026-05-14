@@ -302,12 +302,40 @@ def setup_scoring_operator(config, device):
         device: Device for tensor operations
         
     Returns:
-        Scoring operator object
+        Scoring operator object (TDCMultiOracleScoring if TDC oracles configured, else ADMETScoring)
     """
     from rlmollm.scoring.admet_scoring import ADMETScoring
+    from rlmollm.scoring.tdc_multi_oracle_scoring import TDCMultiOracleScoring, TDC_ORACLES
     
-    scoring_config = config['scoring_operator']
-    if device is not None and 'device' in scoring_config.get('scoring_parameters', {}):
-        scoring_config['scoring_parameters']['device'] = device
+    scoring_config = config.get('scoring_operator', {})
     
-    return ADMETScoring(**scoring_config)
+    # Check if TDC oracles are configured
+    scoring_tdc_names = scoring_config.get('scoring_tdc_names', [])
+    
+    # Also check if any TDC oracle names are in selection_names
+    selection_names = scoring_config.get('selection_names', [])
+    tdc_in_selection = [name for name in selection_names if name in TDC_ORACLES]
+    
+    if scoring_tdc_names or tdc_in_selection:
+        # Use TDC Multi-Oracle Scoring
+        if not scoring_tdc_names:
+            scoring_tdc_names = tdc_in_selection
+        
+        fitness_function = scoring_config.get('fitness_function', None)
+        
+        print(f"[TDC Mode] Using TDC oracles: {scoring_tdc_names}")
+        return TDCMultiOracleScoring(
+            scoring_tdc_names=scoring_tdc_names,
+            scoring_names=scoring_config.get('scoring_names', []),
+            scoring_admet_names=scoring_config.get('scoring_admet_names', []),
+            selection_names=selection_names,
+            fitness_function=fitness_function,
+            data_column_name='smiles',
+            fitness_column_name='fitness',
+        )
+    else:
+        # Use ADMET Scoring (default)
+        if device is not None and 'device' in scoring_config.get('scoring_parameters', {}):
+            scoring_config['scoring_parameters']['device'] = device
+        
+        return ADMETScoring(**scoring_config)

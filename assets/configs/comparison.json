@@ -1,0 +1,27 @@
+{
+    "gan_operators": [
+        {
+            "model_directory": "assets/models",
+            "saved_generator": "assets/models/moses_pretrained.pt",
+            "tokenizer_directory": "tokenizer",
+            "tokenizer_type": "bert",
+            "device": 0
+        }
+    ],
+    "scoring_operator": {
+        "scoring_names": ["synth", "drug", "logP", "number", "logD"],
+        "scoring_liten_names": [],
+        "selection_names": ["drug", "logP"],
+        "property_config": {
+            "synth": {"range": [0, 8], "preferred_value": 0.0},
+            "drug": {"range": [0, 1], "preferred_value": 1.0},
+            "logP": {"range": [-4, 7], "preferred_range": [1.35, 1.8]},
+            "logD": {"range": [-4, 7], "preferred_range": [1.35, 1.8]},
+            "number": {"range": [0, 50], "preferred_value": 30.0}
+        }
+    },
+    "no_scaffold_operator": {
+        "fixed_substructure": false,
+        "use_empirical": true
+    }
+}

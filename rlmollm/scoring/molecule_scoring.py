@@ -87,11 +87,11 @@ class MoleculeScoring(ScoringInterface):
         self._exempt_brackets = {'[C@@H]', '[C@H]', '[C@]', '[C@@]', '[nH]'}
 
         # check that data and fitness column names are not part of possible scoring functions
-        if self.data_column_name in self._name_to_function:
-            raise ValueError('Error: data column name ' + self.data_column_name + ' cannot be ' + ', '.join(self._name_to_function.keys()))
+        if self._data_column_name in self._name_to_function:
+            raise ValueError('Error: data column name ' + self._data_column_name + ' cannot be ' + ', '.join(self._name_to_function.keys()))
 
-        if self.fitness_column_name in self._name_to_function:
-            raise ValueError('Error: data column name ' + self.data_column_name + ' cannot be ' + ', '.join(self._name_to_function.keys()))
+        if self._fitness_column_name in self._name_to_function:
+            raise ValueError('Error: data column name ' + self._data_column_name + ' cannot be ' + ', '.join(self._name_to_function.keys()))
 
         # Note: SA scoring now uses RDKit's built-in sascorer directly
         # The old pickle-based sa_model approach is deprecated and removed
@@ -132,7 +132,8 @@ class MoleculeScoring(ScoringInterface):
             'synth': self._synthetic_accessibility_with_default,
             'drug': self._qed_with_default,
             'logP': self._crippen_mol_logp_with_default,
-            'number': self._number_with_default
+            'number': self._number_with_default,
+            "logD": self._crippen_mol_logD_with_default,
         }
 
     def generate_scores(self, mols):
@@ -155,32 +156,38 @@ class MoleculeScoring(ScoringInterface):
         # Mapping for properties that need raw values
         raw_function_map = {
             'logP': lambda mol: Crippen.MolLogP(mol) if mol else -3.0,
+            'logD': lambda mol: Crippen.MolLogD(mol) if mol else -3.0,
             'synth': lambda mol: sascorer.calculateScore(mol) if mol else 10.0,
             'drug': self._qed_with_default,
             'number': self._number_with_default
         }
 
-        # Apply scoring functions ONLY for properties in selection_names
-        # This ensures only properties used for fitness appear in output
+        # Get valid selection names (intersection of scoring_names and selection_names)
+        valid_selection_names = [name for name in self._scoring_names if name in self._selection_names]
+        has_fitness = len(valid_selection_names) > 0
+        
+        # Apply scoring functions ONLY for properties in valid_selection_names
         for scoring_name in self._scoring_names:
             # Only include if it's in selection_names (used for fitness)
-            if scoring_name in self._selection_names:
+            if scoring_name in valid_selection_names:
                 output[scoring_name] = list(map(self._name_to_function[scoring_name], mols))
                 # Get raw values if mapping exists
                 if scoring_name in raw_function_map:
                     output[scoring_name + '_raw'] = list(map(raw_function_map[scoring_name], mols))
         
         # always return data as well
-        output[self.data_column_name] = list(map(mol_to_canonical_smiles, mols))
-
-        # return fitness
-        output[self._fitness_column_name] = []
-        for i in range(len(output[self.data_column_name])):
-            fitness_array = [output[x][i] for x in self._selection_names]
-            if len(fitness_array) > 0:
-                output[self._fitness_column_name].append(self._fitness_function(fitness_array))
-            else:
-                output[self._fitness_column_name].append(-1.0)
+        data_column = list(map(mol_to_canonical_smiles, mols))
+        output[self.data_column_name] = data_column
+        
+        # Only calculate fitness if we have valid selection names
+        if has_fitness:
+            output[self._fitness_column_name] = []
+            for i in range(len(data_column)):
+                fitness_array = [output[x][i] for x in valid_selection_names]
+                if len(fitness_array) > 0:
+                    output[self._fitness_column_name].append(self._fitness_function(fitness_array))
+                else:
+                    output[self._fitness_column_name].append(-1.0)
 
         return output
 
@@ -234,18 +241,27 @@ class MoleculeScoring(ScoringInterface):
         # Start with data column name
         base_names = [self._data_column_name]
         
-        # Add only selection names (properties actually used for fitness)
-        base_names.extend([name for name in self._scoring_names if name in self._selection_names])
+        # Add only selection names that are also in scoring_names (properties actually used for fitness)
+        valid_selection_names = [name for name in self._scoring_names if name in self._selection_names]
+        base_names.extend(valid_selection_names)
         
         # Add raw value columns for selection names only
-        raw_names = [name + '_raw' for name in self._scoring_names if name in self._selection_names]
+        raw_names = [name + '_raw' for name in valid_selection_names]
+        
+        # Determine if we have any valid selection names (fitness column will exist only if there are selection names)
+        has_fitness = len(valid_selection_names) > 0
         
         # Add ADMET names if present (always included if specified)
         if self._scoring_admet_names is not None:
             admet_raw = [name + '_raw' for name in self._scoring_admet_names]
-            all_names = base_names + raw_names + admet_raw + list(self._scoring_admet_names) + [self._fitness_column_name]
+            admet_names = list(self._scoring_admet_names)
+            all_names = base_names + raw_names + admet_raw + admet_names
         else:
-            all_names = base_names + raw_names + [self._fitness_column_name]
+            all_names = base_names + raw_names
+        
+        # Only add fitness column if we have valid selection names
+        if has_fitness:
+            all_names.append(self._fitness_column_name)
         
         # Remove duplicates while preserving order
         seen = set()
@@ -326,7 +342,16 @@ class MoleculeScoring(ScoringInterface):
         if norm:
             score = np.clip(remap(score, -2.12178879609, 6.0429063424), 0.0, 1.0)
         return score
-
+    
+    def _crippen_mol_logD_with_default(self, mol, default=-3.0, norm=True):
+        try:
+            score = Crippen.MolLogD(mol)
+        except:
+            score = default
+        if norm:
+            score = np.clip(remap(score, -2.12178879609, 6.0429063424), 0.0, 1.0)
+        return score
+    
     def _synthetic_accessibility_with_default(self, mol, default=10, norm=True):
         """Generate synthesizability score using RDKit's SA scorer.
 

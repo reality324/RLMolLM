@@ -4,25 +4,37 @@ import transformers
 class Generator(torch.nn.Module):
     """Class for a Generator model based off of a masked language model."""
 
-    def __init__(self, model_directory, tokenizer, random_init=False):
+    def __init__(self, model_directory, tokenizer, random_init=False, saved_weights=None):
         """Constructor for Generator class.
 
         Args:
             model_directory (str): Directory to be used to initialize model using hugging face
-            tokenizer (hugging face tokenizer): Tokenizer determines conversion of text to token ids 
+            tokenizer (hugging face tokenizer): Tokenizer determines conversion of text to token ids
+            random_init (bool): If True, create model from config; if False, load from pretrained
+            saved_weights (str): Path to .pt checkpoint file with bert.xxx format weights
         """
         super(Generator, self).__init__()
         self.model_directory = model_directory
+        self._tokenizer = tokenizer
+
         # language model is used to generate embeddings - each embedding ranks all tokens in vocab
         self.embedding = None
-        if random_init:
+
+        if saved_weights is not None:
+            # Load from local checkpoint with bert.xxx format
+            config = transformers.AutoConfig.from_pretrained(model_directory)
+            self.embedding = transformers.AutoModelForMaskedLM.from_config(config)
+            # Load weights directly (bert.xxx format matches BertForMaskedLM structure)
+            state_dict = torch.load(saved_weights, map_location='cpu', weights_only=False)
+            self.embedding.load_state_dict(state_dict)
+            print(f"Loaded weights from {saved_weights}")
+        elif random_init:
             config = transformers.AutoConfig.from_pretrained(model_directory)
             self.embedding = transformers.AutoModelForMaskedLM.from_config(config)
         else:
             self.embedding = transformers.AutoModelForMaskedLM.from_pretrained(model_directory, use_auth_token=True)
-        self._embedding_dim = self.embedding.config.hidden_size
 
-        self._tokenizer = tokenizer
+        self._embedding_dim = self.embedding.config.hidden_size
 
         # separator token is used to mark the end of molecule sequences
         self._sep_token_tensor = torch.nn.parameter.Parameter(torch.zeros(self.embedding.config.vocab_size, dtype=torch.float), requires_grad=False)

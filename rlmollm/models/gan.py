@@ -60,11 +60,26 @@ class Gan:
             self._optimizer_disc = optim.AdamW(self._disc.parameters(), lr=self._lr)
 
         if saved_generator != None:
-            self._gen.load_state_dict(torch.load(saved_generator))
+            # Load generator weights
+            state_dict = torch.load(saved_generator, map_location=self._device, weights_only=False)
+
+            # Check if weights are in 'bert.xxx' format (from fixed checkpoint)
+            # vs 'embedding.xxx' format (from Generator.state_dict())
+            first_key = next(iter(state_dict.keys()), "")
+            if first_key.startswith('bert.'):
+                # Fixed checkpoint format: 'bert.xxx' -> load to embedding directly
+                print(f"Loading fixed checkpoint format (bert.xxx) to embedding...")
+                self._gen.embedding.load_state_dict(state_dict)
+            elif first_key.startswith('embedding.'):
+                # Original Generator format: 'embedding.xxx' -> load to full generator
+                self._gen.load_state_dict(state_dict)
+            else:
+                # Unknown format, try direct load
+                self._gen.load_state_dict(state_dict)
 
         # note: this will fail if it conflicts with generator_only
         if saved_discriminator != None:
-            self._disc.load_state_dict(torch.load(saved_discriminator), strict=False)
+            self._disc.load_state_dict(torch.load(saved_discriminator, map_location=self._device), strict=False)
 
     @property
     def generator_only(self):
@@ -195,7 +210,11 @@ class Gan:
                     print(f"  Batch {batch_idx + 1}/{total_batches} ({progress_pct:.1f}%) - MLM Loss: {batch_gen_loss:.4f}", 
                           file=log_file, flush=True)
 
-        return (time.time() - t), metric_disc_loss / batch_counter, metric_gen_loss / batch_counter
+        # Return average losses (handle edge case of zero batches)
+        if batch_counter > 0:
+            return (time.time() - t), metric_disc_loss / batch_counter, metric_gen_loss / batch_counter
+        else:
+            return (time.time() - t), 0.0, 0.0
 
     # def generate_masks(self, batch_ids, batch_mask, task='replace', max_num_token=35):
     #     """Randomly mask token ids for use in generation
@@ -442,7 +461,7 @@ class Gan:
                     updated_attention_mask[i,:end_index+updated_length+1] = 1
 
             # each sequence has CLS and SEP tokens at beginning and end
-            number_of_tokens = torch.count_nonzero(masked_ids[i]) - 2
+            number_of_tokens = torch.count_nonzero(masked_ids[i]).item() - 2
 
             if number_of_tokens == 0:
                 # corner case for empty inputs
@@ -467,9 +486,200 @@ class Gan:
                             delete_set.add(selected_delete_location + 1)
                         mutation_locations.add(selected_delete_location)
 
-                # apply mutations
+                # Pre-scan: identify all chiral-related positions to skip
+                # 使用更严谨的方法识别所有手性结构
+                chiral_skip_positions = set()
+                
+                # 方法1: 从token序列解码SMILES（排除特殊token）
+                special_ids = {self._tokenizer.cls_token_id, self._tokenizer.sep_token_id, 
+                              self._tokenizer.pad_token_id, self._tokenizer.mask_token_id}
+                
+                visible_token_ids = [tid.item() for tid in masked_ids[i] if tid.item() not in special_ids]
+                if visible_token_ids:
+                    try:
+                        decoded_smiles = self._tokenizer.decode(visible_token_ids).replace(' ', '').strip()
+                        
+                        # 使用RDKit识别所有手性结构
+                        mol = Chem.MolFromSmiles(decoded_smiles)
+                        if mol is not None:
+                            # 1. 找手性原子中心
+                            chiral_atoms = Chem.FindMolChiralCenters(mol)
+                            
+                            # 2. 找手性双键
+                            chiral_bonds = []
+                            for bond in mol.GetBonds():
+                                if bond.GetStereo() != Chem.rdchem.BondStereo.STEREONONE:
+                                    chiral_bonds.append(bond)
+                            
+                            # 3. 重建SMILES中的手性标记位置
+                            # 在SMILES中定位 @ @@ @H @@H / \ 等手性标记
+                            chiral_markers_in_smiles = []
+                            smi_idx = 0
+                            while smi_idx < len(decoded_smiles):
+                                char = decoded_smiles[smi_idx]
+                                if char == '@':
+                                    chiral_markers_in_smiles.append(smi_idx)
+                                    # 检查连续标记 @@H 等
+                                    if smi_idx + 1 < len(decoded_smiles):
+                                        next_char = decoded_smiles[smi_idx + 1]
+                                        if next_char == '@' or next_char == 'H' or next_char == '+':
+                                            chiral_markers_in_smiles.append(smi_idx + 1)
+                                            if next_char == '@' and smi_idx + 2 < len(decoded_smiles):
+                                                next_next = decoded_smiles[smi_idx + 2]
+                                                if next_next == 'H' or next_next == '+':
+                                                    chiral_markers_in_smiles.append(smi_idx + 2)
+                                elif char == '/' or char == '\\':
+                                    chiral_markers_in_smiles.append(smi_idx)
+                                smi_idx += 1
+                            
+                            # 4. 将SMILES位置映射到token位置
+                            # 模拟tokenizer的分词过程
+                            if chiral_markers_in_smiles:
+                                # 重建token->char的映射
+                                token_to_chars = []
+                                running_pos = 0
+                                for tid in visible_token_ids:
+                                    token_text = self._tokenizer.decode([tid]).replace(' ', '')
+                                    token_len = len(token_text)
+                                    token_to_chars.append((running_pos, running_pos + token_len))
+                                    running_pos += token_len
+                                
+                                # 找到与手性标记重叠的token
+                                for smi_pos in chiral_markers_in_smiles:
+                                    for tok_idx, (start, end) in enumerate(token_to_chars):
+                                        if start <= smi_pos < end:
+                                            # 这个token与手性标记重叠，标记它及周围的相关token
+                                            chiral_skip_positions.add(tok_idx + 1)  # +1 因为有CLS token
+                                            # 也标记相邻token以确保完整性
+                                            if tok_idx > 0:
+                                                chiral_skip_positions.add(tok_idx)
+                                            if tok_idx + 2 < len(visible_token_ids) + 1:
+                                                chiral_skip_positions.add(tok_idx + 2)
+                    except Exception as e:
+                        # 解码失败时使用备用方法
+                        pass
+                
+                # 方法2: 直接检查token内容中是否有手性标记
+                seq_length = len(masked_ids[i])
+                for pos in range(seq_length):
+                    if masked_ids[i][pos].item() in special_ids:
+                        continue
+                    token_text = self._tokenizer.decode([masked_ids[i][pos].item()]).replace(' ', '').strip()
+                    
+                    # 检查各种手性相关标记
+                    if any(marker in token_text for marker in ['@', '[', ']', '/', '\\']):
+                        chiral_skip_positions.add(pos)
+                    
+                    # 处理双键E/Z手性：跳过 / 或 \ 及其相邻的原子
+                    if token_text in ['/', '\\']:
+                        chiral_skip_positions.add(pos)
+                        # 跳过相邻的原子（双键两端的原子）
+                        if pos > 0:
+                            prev_tid = masked_ids[i][pos-1].item()
+                            if prev_tid not in special_ids:
+                                prev_text = self._tokenizer.decode([prev_tid]).replace(' ', '')
+                                # 跳过非特殊字符的相邻原子
+                                if prev_text not in ['(', ')', '=', '#', '[', ']', '+', '-', '/', '\\']:
+                                    chiral_skip_positions.add(pos - 1)
+                        if pos < seq_length - 1:
+                            next_tid = masked_ids[i][pos+1].item()
+                            if next_tid not in special_ids:
+                                next_text = self._tokenizer.decode([next_tid]).replace(' ', '')
+                                # 跳过非特殊字符的相邻原子
+                                if next_text not in ['(', ')', '=', '#', '[', ']', '+', '-', '/', '\\']:
+                                    chiral_skip_positions.add(pos + 1)
+                        continue
+                    
+                    # 检查UNK token（可能是特殊手性字符）
+                    if token_text == '[UNK]':
+                        # 检查前后是否有手性标记
+                        if pos > 0 and pos < seq_length - 1:
+                            prev_tid = masked_ids[i][pos-1].item()
+                            next_tid = masked_ids[i][pos+1].item()
+                            if prev_tid not in special_ids:
+                                prev_text = self._tokenizer.decode([prev_tid]).replace(' ', '')
+                                if '@' in prev_text or prev_text == '[' or prev_text in ['/', '\\']:
+                                    chiral_skip_positions.add(pos)
+                            if next_tid not in special_ids:
+                                next_text = self._tokenizer.decode([next_tid]).replace(' ', '')
+                                if '@' in next_text or next_text == ']' or next_text in ['/', '\\']:
+                                    chiral_skip_positions.add(pos)
+                    
+                    # 处理 [ 后面紧跟的可能手性原子 (C, N, S, P, Se, As, Si, B等)
+                    if token_text == '[' and pos < seq_length - 1:
+                        found_chiral = False
+                        found_close_bracket = False
+                        for offset in range(1, 10):  # 检查后续多个位置
+                            if pos + offset >= seq_length:
+                                break
+                            next_tid = masked_ids[i][pos + offset].item()
+                            if next_tid in special_ids:
+                                continue
+                            next_text = self._tokenizer.decode([next_tid]).replace(' ', '')
+                            if next_text == ']':
+                                # 标记整个 [ ... ] 范围
+                                for j in range(pos, pos + offset + 1):
+                                    chiral_skip_positions.add(j)
+                                found_close_bracket = True
+                                break
+                            elif next_text in ['C', 'N', 'S', 'P', 'Se', 'As', 'Si', 'B', 'c', 'n']:
+                                continue  # 继续找 ]
+                            elif '@' in next_text:
+                                # 这是一个手性原子，标记从[到]的所有位置
+                                found_chiral = True
+                                # 继续寻找 ] 以确定整个范围
+                                for inner_offset in range(offset + 1, 10):
+                                    if pos + inner_offset >= seq_length:
+                                        break
+                                    inner_tid = masked_ids[i][pos + inner_offset].item()
+                                    if inner_tid in special_ids:
+                                        continue
+                                    inner_text = self._tokenizer.decode([inner_tid]).replace(' ', '')
+                                    chiral_skip_positions.add(pos + inner_offset)
+                                    if inner_text == ']':
+                                        break
+                                # 标记从[到]的所有位置
+                                for j in range(pos, pos + inner_offset + 1):
+                                    chiral_skip_positions.add(j)
+                                break
+                            else:
+                                # 不是手性原子结构，可能只是普通括号
+                                pass
+
+                # apply mutations - skip chiral structures entirely
                 for location in mutation_locations:
-                    masked_ids[i][location] = self._tokenizer.mask_token_id
+                    # Skip if this position is part of chiral structure
+                    if location in chiral_skip_positions:
+                        continue
+                    
+                    token_text = self._tokenizer.decode([masked_ids[i][location].item()]).replace(' ', '').strip()
+                    
+                    # Skip all brackets and special structural chars
+                    if any(c in token_text for c in ['[', ']', '(', ')', '=', '#', '%', '+', '-']):
+                        continue
+                    
+                    # Skip ring digits and adjacent tokens
+                    if token_text.isdigit():
+                        continue
+                    
+                    # Skip aromatic atoms (lowercase)
+                    if token_text.islower():
+                        continue
+                    
+                    # Skip all-non-SMILES tokens (special tokens, unknown, etc.)
+                    # Mask everything else that could be part of a SMILES string
+                    is_valid_smiles_token = (
+                        len(token_text) > 0 and
+                        len(token_text) < 30 and
+                        token_text != '[UNK]' and
+                        not token_text.startswith('[PAD]') and
+                        not token_text.startswith('[CLS]') and
+                        not token_text.startswith('[SEP]') and
+                        not token_text.startswith('[MASK]')
+                    )
+                    
+                    if is_valid_smiles_token:
+                        masked_ids[i][location] = self._tokenizer.mask_token_id
 
                 # apply insertion and deletion if specified
                 if len(insert_set) > 0:
@@ -559,8 +769,11 @@ class Gan:
                 tokens = modified_ids[0].tolist()
                 for j in range(1, len(tokens) - 1):  # Skip CLS and SEP tokens
                     if tokens[j] != 0 and j not in scaffold_tokens:
-                        if np.random.random() < self._mutation_parameter:
-                            modified_ids[0][j] = self._tokenizer.mask_token_id
+                        # Skip @ symbols to preserve stereochemistry
+                        token_text = self._tokenizer.decode([tokens[j]]).replace(' ', '')
+                        if '@' not in token_text and '[UNK]' not in token_text:
+                            if np.random.random() < self._mutation_parameter:
+                                modified_ids[0][j] = self._tokenizer.mask_token_id
 
             # # Apply masking, avoiding scaffold tokens
             # tokens = modified_ids[0].tolist()
@@ -823,7 +1036,10 @@ class Gan:
                         if mol is None or not mol.HasSubstructMatch(pattern_mol):
                             continue  # Skip molecules without scaffold
                     
-                    results.append(smiles)
+                    # Only add to results if the molecule is valid
+                    mol = Chem.MolFromSmiles(smiles)
+                    if mol is not None:
+                        results.append(smiles)
 
             return results, results_all, masked_sequences
     

@@ -12,217 +12,125 @@ Each property has:
 
 # All available ADMET and molecular properties with their configurations
 PROPERTY_CONFIGS = {
-    # Absorption & Permeability (higher is better)
-    "HIA_Hou": {
-        "range": [0, 1],
-        "preferred_value": 1.0
-    },
-    "Caco2_Wang": {
-        "range": [-8, 2],
-        "preferred_value": 2.0
-    },
-    "PAMPA_NCATS": {
-        "range": [0, 1],
-        "preferred_value": 1.0
-    },
-    "Bioavailability_Ma": {
-        "range": [0, 1],
-        "preferred_value": 1.0
-    },
-    
-    # Metabolism (CYP Enzyme Activity) - lower is better (minimize substrate activity)
-    "CYP3A4_Substrate_CarbonMangels": {
-        "range": [0, 1],
-        "preferred_value": 0.0
-    },
-    "CYP2D6_Substrate_CarbonMangels": {
-        "range": [0, 1],
-        "preferred_value": 0.0
-    },
-    "CYP2C9_Substrate_CarbonMangels": {
-        "range": [0, 1],
-        "preferred_value": 0.0
-    },
-    "CYP1A2_Veith": {
-        "range": [0, 1],
-        "preferred_value": 0.0
-    },
-    "CYP2C19_Veith": {
-        "range": [0, 1],
-        "preferred_value": 0.0
-    },
-    "CYP2C9_Veith": {
-        "range": [0, 1],
-        "preferred_value": 0.0
-    },
-    "CYP2D6_Veith": {
-        "range": [0, 1],
-        "preferred_value": 0.0
-    },
-    "CYP3A4_Veith": {
-        "range": [0, 1],
-        "preferred_value": 0.0
-    },
-    "Clearance_Hepatocyte_AZ": {
-        "range": [-10, 10],
-        "preferred_value": 0.0
-    },
-    "Clearance_Microsome_AZ": {
-        "range": [-10, 10],
-        "preferred_value": 0.0
-    },
-    
-    # Distribution (Blood-Brain Barrier & Plasma Protein Binding)
-    "BBB_Martins": {
-        "range": [0, 1],
-        "preferred_value": 0.0  # Lower is better (unless targeting CNS)
-    },
-    "PPBR_AZ": {
-        "range": [0, 100],
-        "preferred_value": 50.0  # Moderate binding
-    },
-    "VDss_Lombardo": {
-        "range": [-5, 5],
-        "preferred_value": 0.0  # Moderate distribution
-    },
-    
-    # Excretion & Half-life
-    "Half_Life_Obach": {
-        "range": [-30, 30],
-        "preferred_value": 0.0  # Moderate half-life
-    },
-    
-    # Toxicity & Safety (lower is better)
-    "hERG": {
-        "range": [0, 1],
-        "preferred_value": 0.0
-    },
-    "AMES": {
-        "range": [0, 1],
-        "preferred_value": 0.0
-    },
-    "DILI": {
-        "range": [0, 1],
-        "preferred_value": 0.0
-    },
-    "ClinTox": {
-        "range": [0, 1],
-        "preferred_value": 0.0
-    },
-    "Carcinogens_Lagunin": {
-        "range": [0, 1],
-        "preferred_value": 0.0
-    },
-    "Skin_Reaction": {
-        "range": [0, 1],
-        "preferred_value": 0.0
-    },
-    "LD50_Zhu": {
-        "range": [0, 5],
-        "preferred_value": 5.0  # Higher is better (less toxic)
-    },
-    
-    # Physicochemical Properties
-    "logP": {
-        "range": [-3, 7],
-        "preferred_value": 2.0  # Target moderate lipophilicity
-    },
-    "tpsa": {
-        "range": [0, 200],
-        "preferred_value": 80.0  # Target moderate TPSA
-    },
-    "Solubility_AqSolDB": {
-        "range": [-10, 2],
-        "preferred_value": -1.0  # Target good solubility
-    },
-    "Lipinski": {
-        "range": [0, 4],
-        "preferred_value": 0.0  # Minimize violations
-    },
-    "QED": {
-        "range": [0, 1],
-        "preferred_value": 1.0  # Maximize drug-likeness
-    },
-    "HydrationFreeEnergy_FreeSolv": {
-        "range": [-30, 10],
-        "preferred_value": -7.5  # Target moderate hydration
-    },
-    "Lipophilicity_AstraZeneca": {
-        "range": [-3, 3],
-        "preferred_value": 0.5  # Target moderate lipophilicity
-    },
-    
-    # Other Properties
-    "molecular_weight": {
-        "range": [0, 900],
-        "preferred_value": 300.0  # Target typical drug MW
-    },
-    "hydrogen_bond_acceptors": {
-        "range": [0, 15],
-        "preferred_value": 5.0  # Moderate H-bond acceptors
-    },
-    "hydrogen_bond_donors": {
-        "range": [0, 8],
-        "preferred_value": 2.5  # Moderate H-bond donors
-    },
-    "stereo_centers": {
-        "range": [0, 10],
-        "preferred_value": 1.5  # Few stereocenters
-    },
-    "Pgp_Broccatelli": {
-        "range": [0, 1],
-        "preferred_value": 0.0  # Minimize P-gp substrate activity
-    },
-    "NR-AR-LBD": {
-        "range": [0, 1],
-        "preferred_value": 0.0
-    },
-    "NR-AR": {
-        "range": [0, 1],
-        "preferred_value": 0.0
-    },
-    "NR-AhR": {
-        "range": [0, 1],
-        "preferred_value": 0.0
-    },
-    "NR-Aromatase": {
-        "range": [0, 1],
-        "preferred_value": 0.0
-    },
-    "NR-ER-LBD": {
-        "range": [0, 1],
-        "preferred_value": 0.0
-    },
-    "NR-ER": {
-        "range": [0, 1],
-        "preferred_value": 0.0
-    },
-    "NR-PPAR-gamma": {
-        "range": [0, 1],
-        "preferred_value": 0.0
-    },
-    "SR-ARE": {
-        "range": [0, 1],
-        "preferred_value": 0.0
-    },
-    "SR-ATAD5": {
-        "range": [0, 1],
-        "preferred_value": 0.0
-    },
-    "SR-HSE": {
-        "range": [0, 1],
-        "preferred_value": 0.0
-    },
-    "SR-MMP": {
-        "range": [0, 1],
-        "preferred_value": 0.0
-    },
-    "SR-p53": {
-        "range": [0, 1],
-        "preferred_value": 0.0
-    }
-}
 
+    # === RDKit properties ===
+    "synth": {"range": [0, 8], "preferred_value": 0.0},
+    "drug": {"range": [0, 1], "preferred_value": 1.0},
+    "logP": {"range": [-4, 7], "preferred_range": [1.35, 1.8]},
+    "logD": {"range": [-4, 7], "preferred_range": [1.35, 1.8]},
+
+    # === Absorption/Permeability ===
+    "Pgp_substrate": {"range": [0, 1], "preferred_value": 1.0},
+    "Pgp_inhibitor": {"range": [0, 1], "preferred_value": 1.0},
+    "BCRP_inhibitor": {"range": [0, 1], "preferred_value": 1.0},
+    "BSEP_inhibitor": {"range": [0, 1], "preferred_value": 1.0},
+    "HIA": {"range": [0, 1], "preferred_value": 1.0},
+    "PAMPA": {"range": [0, 1], "preferred_value": 1.0},
+    "F20%": {"range": [0, 1], "preferred_value": 1.0},
+    "F30%": {"range": [0, 1], "preferred_value": 1.0},
+    "F50%": {"range": [0, 1], "preferred_value": 1.0},
+    "OATP1B1_inhibitor": {"range": [0, 1], "preferred_value": 1.0},
+    "OATP1B3_inhibitor": {"range": [0, 1], "preferred_value": 1.0},
+    "BBB": {"range": [0, 1], "preferred_value": 1.0},
+    "MRP1_inhibitor": {"range": [0, 1], "preferred_value": 1.0},
+
+    # === Metabolism/CYP ===
+    "CYP3A4_inhibitor": {"range": [0, 1], "preferred_value": 0.0},
+    "CYP1A2_inhibitor": {"range": [0, 1], "preferred_value": 0.0},
+    "CYP1A2_substrate": {"range": [0, 1], "preferred_value": 1.0},
+    "CYP2C19_inhibitor": {"range": [0, 1], "preferred_value": 0.0},
+    "CYP2C19_substrate": {"range": [0, 1], "preferred_value": 1.0},
+    "CYP2C9_inhibitor": {"range": [0, 1], "preferred_value": 0.0},
+    "CYP2C9_substrate": {"range": [0, 1], "preferred_value": 1.0},
+    "CYP2D6_inhibitor": {"range": [0, 1], "preferred_value": 0.0},
+    "CYP2D6_substrate": {"range": [0, 1], "preferred_value": 1.0},
+    "CYP3A4_substrate": {"range": [0, 1], "preferred_value": 1.0},
+    "CYP2B6_inhibitor": {"range": [0, 1], "preferred_value": 0.0},
+    "CYP2B6_substrate": {"range": [0, 1], "preferred_value": 1.0},
+    "CYP2C8_inhibitor": {"range": [0, 1], "preferred_value": 0.0},
+    "HLM_stability": {"range": [0, 1], "preferred_value": 1.0},
+
+    # === Toxicity (LiTEN) ===
+    "hERG_Blockers": {"range": [0, 1], "preferred_value": 0.0},
+    "hERG_Blockers_10um": {"range": [0, 1], "preferred_value": 0.0},
+    "AMES_Mutagenicity": {"range": [0, 1], "preferred_value": 0.0},
+    "Drug_induced_liver_injury": {"range": [0, 1], "preferred_value": 1.0},
+    "ROA": {"range": [0, 1], "preferred_value": 1.0},
+    "FDAMDD": {"range": [0, 1], "preferred_value": 1.0},
+    "Skin_Sensitization": {"range": [0, 1], "preferred_value": 1.0},
+    "Carcinogenicity": {"range": [0, 1], "preferred_value": 1.0},
+    "Eye_Corrosion": {"range": [0, 1], "preferred_value": 1.0},
+    "Eye_Irritation": {"range": [0, 1], "preferred_value": 1.0},
+    "Respiratory": {"range": [0, 1], "preferred_value": 1.0},
+    "Human_Hepatotoxicity": {"range": [0, 1], "preferred_value": 1.0},
+    "Drug_induced_Neurotoxicity": {"range": [0, 1], "preferred_value": 1.0},
+    "Ototoxicity": {"range": [0, 1], "preferred_value": 1.0},
+    "Hematotoxicity": {"range": [0, 1], "preferred_value": 1.0},
+    "Drug_induced_Nephrotoxicity": {"range": [0, 1], "preferred_value": 1.0},
+    "Genotoxicity": {"range": [0, 1], "preferred_value": 1.0},
+    "RPMI_8226_Immunitoxicity": {"range": [0, 1], "preferred_value": 1.0},
+    "A549_Cytotoxicity": {"range": [0, 1], "preferred_value": 1.0},
+    "Hek293_Cytotoxicity": {"range": [0, 1], "preferred_value": 1.0},
+
+    # === Tox21 NR ===
+    "NR_AhR": {"range": [0, 1], "preferred_value": 1.0},
+    "NR_AR": {"range": [0, 1], "preferred_value": 1.0},
+    "NR_AR_LBD": {"range": [0, 1], "preferred_value": 1.0},
+    "NR_Aromatase": {"range": [0, 1], "preferred_value": 1.0},
+    "NR_ER": {"range": [0, 1], "preferred_value": 1.0},
+    "NR_ER_LBD": {"range": [0, 1], "preferred_value": 1.0},
+    "NR_PPAR_gamma": {"range": [0, 1], "preferred_value": 1.0},
+
+    # === Tox21 SR ===
+    "SR_ARE": {"range": [0, 1], "preferred_value": 1.0},
+    "SR_ATAD5": {"range": [0, 1], "preferred_value": 1.0},
+    "SR_HSE": {"range": [0, 1], "preferred_value": 1.0},
+    "SR_MMP": {"range": [0, 1], "preferred_value": 1.0},
+    "SR_p53": {"range": [0, 1], "preferred_value": 1.0},
+
+    # === Additional reference properties ===
+    "AMES": {"range": [0, 1], "preferred_value": 0.0},
+    "BBB_Martins": {"range": [0, 1], "preferred_value": 0.0},
+    "BCF": {"range": [-5, 10], "preferred_value": 0.0},
+    "Bioavailability_Ma": {"range": [0, 1], "preferred_value": 1.0},
+    "CYP1A2_Veith": {"range": [0, 1], "preferred_value": 0.0},
+    "CYP2C19_Veith": {"range": [0, 1], "preferred_value": 0.0},
+    "CYP2C9_Substrate_CarbonMangels": {"range": [0, 1], "preferred_value": 0.0},
+    "CYP2C9_Veith": {"range": [0, 1], "preferred_value": 0.0},
+    "CYP2D6_Substrate_CarbonMangels": {"range": [0, 1], "preferred_value": 0.0},
+    "CYP2D6_Veith": {"range": [0, 1], "preferred_value": 0.0},
+    "CYP3A4_Substrate_CarbonMangels": {"range": [0, 1], "preferred_value": 0.0},
+    "CYP3A4_Veith": {"range": [0, 1], "preferred_value": 0.0},
+    "Caco2_Wang": {"range": [-8, 2], "preferred_value": 2.0},
+    "Carcinogens_Lagunin": {"range": [0, 1], "preferred_value": 0.0},
+    "Cl_Plasma": {"range": [-10, 10], "preferred_value": 0.0},
+    "Clearance_Hepatocyte_AZ": {"range": [-10, 10], "preferred_value": 0.0},
+    "Clearance_Microsome_AZ": {"range": [-10, 10], "preferred_value": 0.0},
+    "ClinTox": {"range": [0, 1], "preferred_value": 0.0},
+    "DILI": {"range": [0, 1], "preferred_value": 0.0},
+    "HIA_Hou": {"range": [0, 1], "preferred_value": 1.0},
+    "Half_Life_Obach": {"range": [-30, 30], "preferred_value": 0.0},
+    "HydrationFreeEnergy_FreeSolv": {"range": [-30, 10], "preferred_value": -7.5},
+    "IGC50": {"range": [-5, 10], "preferred_value": 8.0},
+    "LC50DM": {"range": [-5, 10], "preferred_value": 8.0},
+    "LC50FM": {"range": [-5, 10], "preferred_value": 8.0},
+    "LD50_Zhu": {"range": [0, 5], "preferred_value": 5.0},
+    "Lipinski": {"range": [0, 4], "preferred_value": 0.0},
+    "Lipophilicity_AstraZeneca": {"range": [-3, 3], "preferred_value": 0.5},
+    "PAMPA_NCATS": {"range": [0, 1], "preferred_value": 1.0},
+    "PPBR_AZ": {"range": [0, 100], "preferred_value": 50.0},
+    "Pgp_Broccatelli": {"range": [0, 1], "preferred_value": 0.0},
+    "QED": {"range": [0, 1], "preferred_value": 1.0},
+    "Skin_Reaction": {"range": [0, 1], "preferred_value": 0.0},
+    "Solubility_AqSolDB": {"range": [-10, 2], "preferred_value": -1.0},
+    "VDss_Lombardo": {"range": [-5, 5], "preferred_value": 0.0},
+    "hERG": {"range": [0, 1], "preferred_value": 0.0},
+    "hydrogen_bond_acceptors": {"range": [0, 15], "preferred_value": 5.0},
+    "hydrogen_bond_donors": {"range": [0, 8], "preferred_value": 2.5},
+    "molecular_weight": {"range": [0, 900], "preferred_value": 300.0},
+    "stereo_centers": {"range": [0, 10], "preferred_value": 1.5},
+    "tpsa": {"range": [0, 200], "preferred_value": 80.0},
+}
 
 def get_property_config(property_name):
     """

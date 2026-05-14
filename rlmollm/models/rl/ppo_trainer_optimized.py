@@ -1,7 +1,7 @@
 import torch
 import torch.nn.functional as F
 import numpy as np
-import rdkit.Chem as Chem
+from rdkit import Chem as Chem
 from .MoleculeValueNetwork import MoleculeValueNetwork
 
 
@@ -248,12 +248,16 @@ class PPOTrainerOptimized:
             log_probs = dist.log_prob(sampled_tokens)  # [total_masks]
             entropies = dist.entropy()  # [total_masks]
             
-            # Reconstruct molecules with sampled tokens (maintaining original order)
+                # Reconstruct molecules with sampled tokens (maintaining original order)
             token_idx = 0
             for mol_info in molecule_mask_info:
                 i = mol_info['molecule_idx']
                 masked_indices = mol_info['masked_indices']
                 num_masks = mol_info['num_masks']
+                
+                # Get original SMILES (for tracking purposes)
+                original_smiles = smiles_batch[i] if isinstance(smiles_batch[i], str) else \
+                    self.gan._tokenizer.decode(batch_ids[i], skip_special_tokens=True).replace(' ', '').replace('##', '')
                 
                 # Get tokens and probabilities for this molecule
                 mol_sampled_tokens = sampled_tokens[token_idx:token_idx + num_masks]
@@ -293,6 +297,8 @@ class PPOTrainerOptimized:
         """
         OPTIMIZED: Calculate rewards for generated molecules using batch processing.
         
+        Uses oracle scores with running baseline normalization for stable RL training.
+        
         Args:
             molecules_info: List of dictionaries with molecule information
             invalid_penalty: Penalty for invalid molecules
@@ -316,7 +322,7 @@ class PPOTrainerOptimized:
         rdkit_mols = []
         valid_indices = []
         
-        # Batch prepare molecules (this could be further optimized with multiprocessing)
+        # Batch prepare molecules
         for i, smiles in enumerate(smiles_list):
             mol = self.scoring_operator.prepare_data_for_scoring(smiles)
             
@@ -339,14 +345,41 @@ class PPOTrainerOptimized:
                 molecules_info[i]['reward'] = invalid_penalty
                 molecules_info[i]['scores'] = {}
         
-        # OPTIMIZATION: Batch scoring (single call instead of individual scoring)
+        # OPTIMIZATION: Batch scoring
         if rdkit_mols:
             scores = self.scoring_operator.generate_scores(rdkit_mols)
             
-            # Vectorized score assignment
+            # Collect all fitness scores for baseline calculation
+            fitness_scores = []
             for idx, orig_idx in enumerate(valid_indices):
                 fitness = scores[self.scoring_operator.fitness_column_name][idx]
-                molecules_info[orig_idx]['reward'] = fitness * reward_scale
+                fitness_scores.append(fitness)
+            
+            # Calculate running baseline (mean of current batch)
+            if fitness_scores:
+                baseline = sum(fitness_scores) / len(fitness_scores)
+            else:
+                baseline = 0
+            
+            # Vectorized score assignment with BASELINE NORMALIZATION
+            for idx, orig_idx in enumerate(valid_indices):
+                fitness = scores[self.scoring_operator.fitness_column_name][idx]
+                
+                # Normalized reward: (score - baseline) / std
+                # This centers rewards around 0, making training more stable
+                if len(fitness_scores) > 1:
+                    std = (sum((s - baseline) ** 2 for s in fitness_scores) / len(fitness_scores)) ** 0.5
+                    if std > 0:
+                        normalized_reward = (fitness - baseline) / std
+                    else:
+                        normalized_reward = fitness - baseline
+                else:
+                    normalized_reward = fitness - baseline
+                
+                # Combine normalized reward with scaled absolute reward for stability
+                molecules_info[orig_idx]['reward'] = normalized_reward * reward_scale
+                molecules_info[orig_idx]['absolute_reward'] = fitness * reward_scale
+                molecules_info[orig_idx]['baseline'] = baseline
                 
                 # Store all calculated scores
                 mol_scores = {}

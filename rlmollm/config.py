@@ -13,7 +13,8 @@ PACKAGE_ROOT = Path(__file__).parent.parent.absolute()
 # Default paths (relative to package root)
 DEFAULT_PATHS = {
     # Model weights (in assets/models/)
-    "model_moses": "assets/models/moses_pretrained.pt",
+    # Use fixed checkpoint (Generator -> BertForMaskedLM format conversion)
+    "model_moses": "assets/models/moses_pretrained_fixed.pt",
     "model_zinc": "assets/models/zinc_pretrained.pt",
     "model_guacamol": "assets/models/guacamol_pretrained.pt",
     "model_gdb": "assets/models/gdb_pretrained.pt",

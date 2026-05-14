@@ -1,7 +1,7 @@
 import torch
 import torch.nn.functional as F
 import numpy as np
-import rdkit.Chem as Chem
+from rdkit import Chem as Chem
 from .MoleculeValueNetwork import MoleculeValueNetwork
 
 
@@ -273,6 +273,8 @@ class PPOTrainer:
         """
         Calculate rewards for generated molecules.
         
+        Uses oracle scores with running baseline normalization for stable RL training.
+        
         Args:
             molecules_info: List of dictionaries with molecule information
             invalid_penalty: Penalty for invalid molecules
@@ -313,7 +315,6 @@ class PPOTrainer:
                     molecules_info[i]['valid'] = True  # not contain scaffold, but still valid
                     molecules_info[i]['reward'] = invalid_penalty
                     molecules_info[i]['scores'] = {}
-                    # Optionally add a flag indicating scaffold failure
                     molecules_info[i]['scaffold_failure'] = True
             else:
                 molecules_info[i]['valid'] = False
@@ -324,10 +325,35 @@ class PPOTrainer:
         if rdkit_mols:
             scores = self.scoring_operator.generate_scores(rdkit_mols)
             
-            # Assign scores and rewards to valid molecules
+            # Collect all fitness scores for baseline calculation
+            fitness_scores = []
             for idx, orig_idx in enumerate(valid_indices):
                 fitness = scores[self.scoring_operator.fitness_column_name][idx]
-                molecules_info[orig_idx]['reward'] = fitness * reward_scale
+                fitness_scores.append(fitness)
+            
+            # Calculate running baseline (mean of current batch)
+            if fitness_scores:
+                baseline = sum(fitness_scores) / len(fitness_scores)
+            else:
+                baseline = 0
+            
+            # Assign scores with BASELINE NORMALIZATION
+            for idx, orig_idx in enumerate(valid_indices):
+                fitness = scores[self.scoring_operator.fitness_column_name][idx]
+                
+                # Normalized reward: (score - baseline) / std
+                if len(fitness_scores) > 1:
+                    std = (sum((s - baseline) ** 2 for s in fitness_scores) / len(fitness_scores)) ** 0.5
+                    if std > 0:
+                        normalized_reward = (fitness - baseline) / std
+                    else:
+                        normalized_reward = fitness - baseline
+                else:
+                    normalized_reward = fitness - baseline
+                
+                molecules_info[orig_idx]['reward'] = normalized_reward * reward_scale
+                molecules_info[orig_idx]['absolute_reward'] = fitness * reward_scale
+                molecules_info[orig_idx]['baseline'] = baseline
                 
                 # Store all calculated scores
                 mol_scores = {}
