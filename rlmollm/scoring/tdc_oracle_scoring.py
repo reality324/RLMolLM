@@ -9,6 +9,10 @@ import sys
 import numpy as np
 from typing import List, Dict, Optional
 
+# Apply sklearn compatibility patch for TDC's old pickled models (jnk3, gsk3b)
+from rlmollm.scoring.sklearn_compat import apply_sklearn_tree_patch
+apply_sklearn_tree_patch()
+
 # Add RDKit compatibility for TDC
 class _RDKitSixCompat:
     """RDKit six module compatibility layer for RDKit 2024+"""
@@ -106,12 +110,32 @@ class TDCOracleScoring(ScoringInterface):
         self._oracle_name = oracle_name
         self._data_column_name = data_column_name
         self._fitness_column_name = fitness_column_name
-        
-        # Initialize TDC oracle
-        try:
-            self._tdc_oracle = tdc.Oracle(oracle_name)
-        except Exception as e:
-            raise RuntimeError(f"Failed to initialize TDC oracle '{oracle_name}': {e}")
+
+        # Initialize TDC oracle - use compatibility wrapper for jnk3/gsk3b
+        from rlmollm.scoring.sklearn_compat import create_tdc_compat_oracle
+        import os as _os
+
+        _broken_oracles = {'jnk3', 'gsk3b'}
+        if oracle_name in _broken_oracles:
+            _oracle_dir = _os.path.join(_os.path.dirname(__file__), '..', '..', 'oracle')
+            _model_path = _os.path.join(_oracle_dir, f'{oracle_name}_current.pkl')
+            if _os.path.exists(_model_path):
+                try:
+                    self._tdc_oracle = create_tdc_compat_oracle(oracle_name, _model_path)
+                    self._uses_compat_wrapper = True
+                except Exception as _e:
+                    # Fall back to TDC oracle
+                    self._tdc_oracle = tdc.Oracle(oracle_name)
+                    self._uses_compat_wrapper = False
+            else:
+                self._tdc_oracle = tdc.Oracle(oracle_name)
+                self._uses_compat_wrapper = False
+        else:
+            try:
+                self._tdc_oracle = tdc.Oracle(oracle_name)
+                self._uses_compat_wrapper = False
+            except Exception as e:
+                raise RuntimeError(f"Failed to initialize TDC oracle '{oracle_name}': {e}")
         
         # Get target molecule if needed
         self._target_mol = None
@@ -119,7 +143,7 @@ class TDCOracleScoring(ScoringInterface):
             self._target_mol = Chem.MolFromSmiles(ORACLE_TARGETS[oracle_name])
         
         # Property name for this oracle
-        self._scoring_name = f"tdc_{oracle_name}"
+        self._scoring_name = oracle_name  # Use oracle_name directly, e.g., 'jnk3'
         
     @property
     def column_names(self) -> List[str]:
@@ -232,29 +256,47 @@ def get_all_tdc_oracles() -> List[str]:
 
 
 def evaluate_molecules_with_oracles(
-    molecules: List[str], 
+    molecules: List[str],
     oracle_names: List[str]
 ) -> Dict[str, Dict]:
     """Evaluate molecules with multiple TDC oracles.
-    
+
     Args:
         molecules: List of SMILES strings
         oracle_names: List of TDC oracle names
-        
+
     Returns:
         Dictionary mapping oracle names to score dictionaries
     """
+    # Apply sklearn patch first
+    from rlmollm.scoring.sklearn_compat import apply_sklearn_tree_patch
+    apply_sklearn_tree_patch()
+
+    import os as _os
+    from rlmollm.scoring.sklearn_compat import create_tdc_compat_oracle
+    _broken_oracles = {'jnk3', 'gsk3b'}
+
     results = {}
-    
+
     for oracle_name in oracle_names:
         if oracle_name not in TDC_ORACLES:
             print(f"Warning: Unknown oracle '{oracle_name}', skipping")
             continue
-        
+
         try:
-            oracle = tdc.Oracle(oracle_name)
+            # Use compat wrapper for broken oracles
+            if oracle_name in _broken_oracles:
+                _oracle_dir = _os.path.join(_os.path.dirname(__file__), '..', '..', 'oracle')
+                _model_path = _os.path.join(_oracle_dir, f'{oracle_name}_current.pkl')
+                if _os.path.exists(_model_path):
+                    oracle = create_tdc_compat_oracle(oracle_name, _model_path)
+                else:
+                    oracle = tdc.Oracle(oracle_name)
+            else:
+                oracle = tdc.Oracle(oracle_name)
+
             scores = []
-            
+
             for smiles in molecules:
                 try:
                     mol = Chem.MolFromSmiles(smiles)
@@ -265,9 +307,9 @@ def evaluate_molecules_with_oracles(
                         scores.append(float(score) if score is not None else 0.0)
                 except:
                     scores.append(0.0)
-            
+
             valid_scores = [s for s in scores if s > 0]
-            
+
             results[oracle_name] = {
                 'scores': scores,
                 'mean': np.mean(scores) if scores else 0,
@@ -279,5 +321,5 @@ def evaluate_molecules_with_oracles(
         except Exception as e:
             print(f"Error with oracle '{oracle_name}': {e}")
             results[oracle_name] = {'error': str(e)}
-    
+
     return results

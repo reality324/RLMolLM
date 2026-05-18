@@ -33,6 +33,10 @@ class _RDKitSixCompat:
 
 sys.modules['rdkit.six'] = _RDKitSixCompat()
 
+# Apply sklearn compatibility patch for jnk3/gsk3b models
+from rlmollm.scoring.sklearn_compat import apply_sklearn_tree_patch
+apply_sklearn_tree_patch()
+
 import tdc
 from rdkit import Chem
 
@@ -153,11 +157,28 @@ def evaluate_oracles(
     oracle_names: List[str]
 ) -> Dict[str, Dict]:
     """Evaluate molecules with multiple oracles."""
+    # Apply sklearn patch first
+    from rlmollm.scoring.sklearn_compat import apply_sklearn_tree_patch
+    apply_sklearn_tree_patch()
+
+    import os as _os
+    from rlmollm.scoring.sklearn_compat import create_tdc_compat_oracle
+    _broken_oracles = {'jnk3', 'gsk3b'}
+
     results = {}
-    
+
     for oracle_name in oracle_names:
         try:
-            oracle = tdc.Oracle(oracle_name)
+            # Use compat wrapper for broken oracles
+            if oracle_name in _broken_oracles:
+                _oracle_dir = '/home/tianwangcong/RLMolLM/oracle'
+                _model_path = _os.path.join(_oracle_dir, f'{oracle_name}_current.pkl')
+                if _os.path.exists(_model_path):
+                    oracle = create_tdc_compat_oracle(oracle_name, _model_path)
+                else:
+                    oracle = tdc.Oracle(oracle_name)
+            else:
+                oracle = tdc.Oracle(oracle_name)
             scores = []
             
             for smiles in molecules:

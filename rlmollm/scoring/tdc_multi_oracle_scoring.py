@@ -139,11 +139,29 @@ class TDCMultiOracleScoring(ScoringInterface):
         self._fitness_function = fitness_function
         
         # Initialize TDC oracles (lazy loading)
+        # Use sklearn compat wrapper for jnk3/gsk3b which have old sklearn models
         self._tdc_oracles = {}
         self._target_mols = {}
+        
+        # Import sklearn compat function
+        from rlmollm.scoring.sklearn_compat import create_tdc_compat_oracle
+        import os as _os
+        
+        _broken_oracles = {'jnk3', 'gsk3b'}
+        
         for oracle_name in scoring_tdc_names:
             try:
-                self._tdc_oracles[oracle_name] = tdc.Oracle(oracle_name)
+                # Use sklearn compat wrapper for broken oracles
+                if oracle_name in _broken_oracles:
+                    _oracle_dir = _os.path.join(_os.path.dirname(__file__), '..', '..', 'oracle')
+                    _model_path = _os.path.join(_oracle_dir, f'{oracle_name}_current.pkl')
+                    if _os.path.exists(_model_path):
+                        self._tdc_oracles[oracle_name] = create_tdc_compat_oracle(oracle_name, _model_path)
+                    else:
+                        # Fall back to TDC oracle
+                        self._tdc_oracles[oracle_name] = tdc.Oracle(oracle_name)
+                else:
+                    self._tdc_oracles[oracle_name] = tdc.Oracle(oracle_name)
             except Exception as e:
                 print(f"Warning: Failed to initialize TDC oracle '{oracle_name}': {e}")
                 self._tdc_oracles[oracle_name] = None

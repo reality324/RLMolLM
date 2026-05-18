@@ -176,11 +176,18 @@ def train_and_evolve(population, gan_operators, args, train_flags, all_smiles, l
             children_fitness_mean = np.mean(children_fitness)
         
         non_zero_indices = np.nonzero(children_fitness)[0]
-        children_positive = children_novel
-        if len(non_zero_indices) < len(children_fitness):
+        children_positive = len(non_zero_indices)
+        
+        if len(non_zero_indices) == 0:
+            # All fitness=0 - keep all children for diversity, just don't count as "positive"
+            print(f"Warning: All {len(children_fitness)} children have fitness=0, keeping all for diversity")
+            children_positive = 0
+        elif len(non_zero_indices) < len(children_fitness):
+            # Filter to keep only non-zero fitness children, but always keep some
+            min_keep = max(10, len(non_zero_indices))  # Keep at least 10 or all non-zero
             for key in child_population_dict:
-                child_population_dict[key] = [child_population_dict[key][x] for x in non_zero_indices]
-            children_positive = len(non_zero_indices)
+                child_population_dict[key] = [child_population_dict[key][x] for x in non_zero_indices[:min_keep]]
+            children_positive = min(len(non_zero_indices), min_keep)
 
         # Merge population
         children_accepted = 0
