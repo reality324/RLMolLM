@@ -18,6 +18,14 @@ PROPERTY_CONFIGS = {
     "drug": {"range": [0, 1], "preferred_value": 1.0},
     "logP": {"range": [-4, 7], "preferred_range": [1.35, 1.8]},
     "logD": {"range": [-4, 7], "preferred_range": [1.35, 1.8]},
+    # === Physical/Chemical Properties (pcp_reg) ===
+    "logS": {"range": [-10, 1], "preferred_value": -1.0},
+    "logD7.4": {"range": [-3, 2], "preferred_value": 0.0},
+    "Boiling_point": {"range": [50, 400], "preferred_value": 200.0},
+    "Melting_point": {"range": [0, 300], "preferred_value": 150.0},
+    # pKa values from LiTEN are in log-transformed scale (roughly -2 to 3)
+    "pKa_acidic": {"range": [-2, 3], "preferred_value": 2.0},
+    "pKa_basic": {"range": [-2, 3], "preferred_value": 2.0},
 
     # === Absorption/Permeability ===
     "Pgp_substrate": {"range": [0, 1], "preferred_value": 1.0},
@@ -33,6 +41,10 @@ PROPERTY_CONFIGS = {
     "OATP1B3_inhibitor": {"range": [0, 1], "preferred_value": 1.0},
     "BBB": {"range": [0, 1], "preferred_value": 1.0},
     "MRP1_inhibitor": {"range": [0, 1], "preferred_value": 1.0},
+
+    # === Absorption/Permeability Regression ===
+    "Caco2_Permeability": {"range": [-8, 2], "preferred_value": 2.0},
+    "MDCK_Permeability": {"range": [-8, 2], "preferred_value": 2.0},
 
     # === Metabolism/CYP ===
     "CYP3A4_inhibitor": {"range": [0, 1], "preferred_value": 0.0},
@@ -103,7 +115,6 @@ PROPERTY_CONFIGS = {
     "CYP3A4_Veith": {"range": [0, 1], "preferred_value": 0.0},
     "Caco2_Wang": {"range": [-8, 2], "preferred_value": 2.0},
     "Carcinogens_Lagunin": {"range": [0, 1], "preferred_value": 0.0},
-    "Cl_Plasma": {"range": [-10, 10], "preferred_value": 0.0},
     "Clearance_Hepatocyte_AZ": {"range": [-10, 10], "preferred_value": 0.0},
     "Clearance_Microsome_AZ": {"range": [-10, 10], "preferred_value": 0.0},
     "ClinTox": {"range": [0, 1], "preferred_value": 0.0},
@@ -130,6 +141,16 @@ PROPERTY_CONFIGS = {
     "molecular_weight": {"range": [0, 900], "preferred_value": 300.0},
     "stereo_centers": {"range": [0, 10], "preferred_value": 1.5},
     "tpsa": {"range": [0, 200], "preferred_value": 80.0},
+    "Melting_point": {"range": [0, 300], "preferred_value": 150.0},
+
+    # === LiTEN Distribution properties (distribution_reg) ===
+    "PPB": {"range": [0, 100], "preferred_value": 50.0},       # Plasma protein binding (%)
+    "VDss": {"range": [0, 50], "preferred_value": 10.0},      # Volume of distribution (L/kg)
+    "Fu": {"range": [0, 100], "preferred_value": 50.0},        # Unbound fraction (%)
+
+    # === LiTEN Excretion properties (excretion_reg) ===
+    "Cl_Plasma": {"range": [0, 10], "preferred_value": 5.0},  # Plasma clearance (L/h)
+    "T12": {"range": [0, 72], "preferred_value": 24.0},        # Half-life (hours)
 }
 
 def get_property_config(property_name):

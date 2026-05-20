@@ -344,6 +344,9 @@ class ADMETScoring(MoleculeScoring):
         Uses linear distance-based scoring for preferred_value targeting,
         same approach as EvoDiffMol implementation.
         
+        For values outside the configured range, uses a softer decay to avoid
+        sudden 0 scores. Score never goes below a small epsilon.
+        
         Args:
             value (float): The raw property value
             property_name (str): The name of the property for configuration lookup
@@ -366,13 +369,21 @@ class ADMETScoring(MoleculeScoring):
         if 'preferred_value' in config:
             target = config['preferred_value']
             
-            # Linear distance-based scoring
-            # Score = 1.0 at target, decreases linearly to 0 at range boundaries
+            # Calculate max allowed distance
             max_dist = max(target - x_min, x_max - target)
             dist_from_target = abs(value - target)
             
             if max_dist > 0:
+                # Linear score within range
                 score = max(0.0, 1.0 - (dist_from_target / max_dist))
+                
+                # For values outside range, use softer decay instead of 0
+                if dist_from_target > max_dist:
+                    # Use exponential decay for values outside the main range
+                    excess = dist_from_target - max_dist
+                    # Soft minimum: ensure score doesn't go below 0.1 for reasonable excess
+                    soft_decay = max(0.1, 1.0 - (excess / max_dist) * 0.9)
+                    score = min(score, soft_decay)
             else:
                 score = 1.0 if value == target else 0.0
             

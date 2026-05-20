@@ -480,14 +480,14 @@ class RLMolLMGenerator:
         from rlmollm.scoring.tdc_multi_oracle_scoring import TDC_ORACLES
 
         # RDKit-computed properties (no external model needed)
-        rdkit_properties = {'synth', 'drug', 'logP', 'logD', 'number', 'tpsa'}
+        rdkit_properties = {'synth', 'drug', 'logD', 'number', 'tpsa'}
 
         # Properties predicted by LiTEN-ADMET models
         # (see LiTEN-ADMET/config/config.json for task_class -> column mapping)
         liten_properties = {
             'Cl_Plasma', 'T12',           # excretion_reg
             'IGC50', 'BCF', 'LC50DM', 'LC50FM',  # toxicity_reg
-            'ROA', 'hERG_Blockers', 'hERG_Blockers_10um',
+            'ROA', 'hERG_Blockers', 'hERG_Blockers_10um', 'hERG',
             'Drug_induced_liver_injury', 'AMES_Mutagenicity',
             'FDAMDD', 'Skin_Sensitization', 'Carcinogenicity',
             'Eye_Corrosion', 'Eye_Irritation', 'Respiratory',
@@ -509,6 +509,10 @@ class RLMolLMGenerator:
             'CYP3A4_inhibitor', 'CYP3A4_substrate',
             'CYP2B6_inhibitor', 'CYP2B6_substrate',
             'CYP2C8_inhibitor', 'HLM_stability',
+            # tox21_cla
+            'NR_AhR', 'NR_AR', 'NR_AR_LBD', 'NR_Aromatase',
+            'NR_ER', 'NR_ER_LBD', 'NR_PPAR_gamma',
+            'SR_ARE', 'SR_ATAD5', 'SR_HSE', 'SR_MMP', 'SR_p53',
         }
 
         available_admet_properties = set(get_all_properties())
@@ -520,6 +524,8 @@ class RLMolLMGenerator:
             'roa': 'ROA',
             'respiratory': 'Respiratory',
             'herg': 'hERG_Blockers',
+            'hERG': 'hERG_Blockers',
+            'AMES': 'AMES_Mutagenicity',
             'ames': 'AMES_Mutagenicity',
         }
 

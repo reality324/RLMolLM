@@ -1,0 +1,71 @@
+# Git
+.git
+.gitignore
+
+# Python
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg
+*.egg-info
+dist
+build
+.eggs
+
+# Virtual environments
+venv
+.venv
+env
+.env
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# Large data files (download at runtime)
+*.pt
+*.pth
+*.bin
+*.h5
+*.hdf5
+
+# Model checkpoints
+assets/models/*
+!assets/models/.gitkeep
+
+# Initial populations (can be downloaded)
+assets/initial_populations/*
+!assets/initial_populations/.gitkeep
+
+# Output directories
+output/
+optimization_output/
+benchmark_results/
+__pycache__/
+
+# Test outputs
+.pytest_cache
+.coverage
+htmlcov/
+
+# Documentation
+*.md
+!README.md
+docs/
+
+# Docker files (not needed inside image)
+docker-compose*.yml
+Dockerfile*
+.dockerignore
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# CUDA/GPU cache
+.torch/
+.cache/

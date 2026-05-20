@@ -68,6 +68,11 @@ def train_and_evolve(population, gan_operators, args, train_flags, all_smiles, l
     if args.output_directory is not None:
         import pandas as pd
         initial_pop_dict = population.population_dict
+        # Debug: print lengths of each key in population_dict
+        print(f"DEBUG: population_dict keys and lengths:")
+        for k, v in initial_pop_dict.items():
+            print(f"  {k}: len={len(v)}")
+        print(f"DEBUG: _column_names = {population._column_names}")
         initial_df = pd.DataFrame(initial_pop_dict)
         initial_output_file = f"{args.output_directory}/{args.run_id}_initial_population_properties.csv"
         initial_df.to_csv(initial_output_file, index=False)

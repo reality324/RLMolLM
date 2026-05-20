@@ -59,7 +59,9 @@ class Population():
         self._population_dict = {}
         self._data_column_name = self._scoring_operator.data_column_name
         self._fitness_column_name = self._scoring_operator.fitness_column_name
-        self._column_names = self._scoring_operator.column_names
+        # NOTE: _column_names is now a property (defined below) that dynamically
+        # delegates to _scoring_operator.column_names, so it always reflects the
+        # latest scoring operator state (e.g. after target_properties update).
         
         # Initialize PPO trainer if needed
         self._ppo_trainer = None
@@ -74,6 +76,20 @@ class Population():
                 self._fitness_column_name in self._population_dict and
                 len(self._population_dict[self._fitness_column_name]) > 0)
 
+    @property
+    def _column_names(self):
+        """Dynamically get all column names in the population dict.
+        
+        Includes both scoring operator columns AND any additional columns
+        (e.g. fitness) that exist in the population dict.
+        """
+        cols = list(self._scoring_operator.column_names)
+        # Include any extra columns present in the population dict (e.g. fitness)
+        for key in self._population_dict:
+            if key not in cols:
+                cols.append(key)
+        return cols
+    
     @property
     def population_dict(self):
         """Get population dictionary.
@@ -289,6 +305,7 @@ class Population():
         """Ensure all keys in population_dict have the same length.
         
         If lengths are inconsistent, trim all keys to the length of _data_column_name.
+        Skips single-value columns like fitness which are computed separately.
         """
         if not self._population_dict:
             return
@@ -297,16 +314,19 @@ class Population():
         reference_length = len(self._population_dict.get(self._data_column_name, []))
         
         # Check and fix any inconsistent lengths
-        for key in self._column_names:
-            if key in self._population_dict:
-                current_length = len(self._population_dict[key])
-                if current_length != reference_length:
-                    if current_length > reference_length:
-                        # Trim to reference length
-                        self._population_dict[key] = self._population_dict[key][:reference_length]
-                    else:
-                        # This should not happen - data column should be the shortest
-                        raise ValueError(f"Key '{key}' has length {current_length} < reference length {reference_length}")
+        for key in list(self._population_dict.keys()):
+            current_length = len(self._population_dict[key])
+            if current_length == reference_length:
+                continue
+            if current_length == 1 and reference_length > 1:
+                # Single-value column (e.g. fitness) - expand to match reference length
+                self._population_dict[key] = [self._population_dict[key][0]] * reference_length
+            elif current_length > reference_length:
+                # Trim to reference length
+                self._population_dict[key] = self._population_dict[key][:reference_length]
+            elif current_length > 0 and current_length < reference_length:
+                # Pad with last value
+                self._population_dict[key] = self._population_dict[key] + [self._population_dict[key][-1]] * (reference_length - current_length)
 
     def merge_child_population_dict(self, child_population_dict, max_size=-1):
         """Merge child population dict with current population dict.
@@ -325,9 +345,15 @@ class Population():
         # save population size before merge
         original_population_size = self.population_size
 
-        # append to current population
-        for key in self._column_names:
-            self._population_dict[key] += child_population_dict[key]
+        # append to current population - only columns present in both dicts with matching lengths
+        data_len = len(self._population_dict.get(self._data_column_name, []))
+        for key in list(self._population_dict.keys()):
+            if key in child_population_dict:
+                self._population_dict[key] += child_population_dict[key]
+            else:
+                # Column not in child - pad with last value or 0
+                val = self._population_dict[key][-1] if self._population_dict[key] else 0.0
+                self._population_dict[key] += [val] * len(child_population_dict.get(self._data_column_name, []))
         
         # Normalize after merge in case there were any inconsistencies introduced
         self._normalize_population_dict_lengths()
@@ -346,8 +372,9 @@ class Population():
         else:
             selection_index = np.argsort(-1.0*np.array(self._population_dict[self._fitness_column_name]))[:cutoff_size]
 
-        # apply selection
-        for key in self._column_names:
+        # apply selection - use actual keys in dict to handle variable-length columns
+        all_keys = list(self._population_dict.keys())
+        for key in all_keys:
             self._population_dict[key] = [self._population_dict[key][x] for x in selection_index]
 
         # count children accepted
@@ -529,11 +556,15 @@ class Population():
             
         current_size = len(self._population_dict[self._data_column_name])
         
+        # Determine which columns to resize - only those matching data column length
+        # (skip single-value columns like fitness which are computed separately)
+        data_len = len(self._population_dict[self._data_column_name])
+        columns_to_resize = [k for k in self._population_dict if len(self._population_dict[k]) == data_len]
+        
         if current_size > desired_size:
             # Trim down to desired size by randomly selecting molecules
             selected_indices = np.random.choice(current_size, desired_size, replace=False)
-            # Use _column_names to ensure consistent handling of all columns
-            for key in self._column_names:
+            for key in columns_to_resize:
                 self._population_dict[key] = [self._population_dict[key][i] for i in selected_indices]
             print(f"Trimmed population from {current_size} to {desired_size} molecules")
             
@@ -541,8 +572,7 @@ class Population():
             # Fill up to desired size by making random copies
             copy_indices = np.random.choice(current_size, desired_size - current_size)
             for index in copy_indices:
-                # Use _column_names to ensure consistent handling of all columns
-                for key in self._column_names:
+                for key in columns_to_resize:
                     self._population_dict[key].append(self._population_dict[key][index])
             print(f"Expanded population from {current_size} to {desired_size} molecules")
 

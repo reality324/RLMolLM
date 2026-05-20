@@ -1,0 +1,387 @@
+{
+  "logS": {
+    "success": true,
+    "value": 0.9816158480114408,
+    "task_class": "pcp_reg"
+  },
+  "logD7.4": {
+    "success": true,
+    "value": 0.9207278241713842,
+    "task_class": "pcp_reg"
+  },
+  "logP": {
+    "success": false,
+    "value": null,
+    "task_class": "pcp_reg"
+  },
+  "Melting_point": {
+    "success": true,
+    "value": 0.006078770955403656,
+    "task_class": "pcp_reg"
+  },
+  "Boiling_point": {
+    "success": true,
+    "value": 0.01304192066192622,
+    "task_class": "pcp_reg"
+  },
+  "pKa_acidic": {
+    "success": true,
+    "value": 0.0,
+    "task_class": "pcp_reg"
+  },
+  "pKa_basic": {
+    "success": true,
+    "value": 0.0,
+    "task_class": "pcp_reg"
+  },
+  "Caco2_Permeability": {
+    "success": true,
+    "value": 0.3474090099334717,
+    "task_class": "absorption_reg"
+  },
+  "MDCK_Permeability": {
+    "success": true,
+    "value": 0.3530995368957519,
+    "task_class": "absorption_reg"
+  },
+  "PPB": {
+    "success": true,
+    "value": 0.5831072998046876,
+    "task_class": "distribution_reg"
+  },
+  "VDss": {
+    "success": true,
+    "value": 0.7562571108341217,
+    "task_class": "distribution_reg"
+  },
+  "Fu": {
+    "success": true,
+    "value": 0.22302997589111329,
+    "task_class": "distribution_reg"
+  },
+  "Cl_Plasma": {
+    "success": true,
+    "value": 0.6729658126831055,
+    "task_class": "excretion_reg"
+  },
+  "T12": {
+    "success": true,
+    "value": 0.5297576089700062,
+    "task_class": "excretion_reg"
+  },
+  "BCF": {
+    "success": true,
+    "value": 0.9972828984260559,
+    "task_class": "toxicity_reg"
+  },
+  "IGC50": {
+    "success": true,
+    "value": 0.7456366465641902,
+    "task_class": "toxicity_reg"
+  },
+  "LC50DM": {
+    "success": true,
+    "value": 0.8632917404174805,
+    "task_class": "toxicity_reg"
+  },
+  "LC50FM": {
+    "success": true,
+    "value": 0.8288388619056115,
+    "task_class": "toxicity_reg"
+  },
+  "BBB": {
+    "success": true,
+    "value": 0.17366193234920502,
+    "task_class": "absorption_cla"
+  },
+  "Pgp_substrate": {
+    "success": true,
+    "value": 0.9980964064598083,
+    "task_class": "absorption_cla"
+  },
+  "Pgp_inhibitor": {
+    "success": true,
+    "value": 0.06464779376983643,
+    "task_class": "absorption_cla"
+  },
+  "BCRP_inhibitor": {
+    "success": true,
+    "value": 0.024231670424342155,
+    "task_class": "absorption_cla"
+  },
+  "BSEP_inhibitor": {
+    "success": true,
+    "value": 0.9992400407791138,
+    "task_class": "absorption_cla"
+  },
+  "CYP3A4_inhibitor": {
+    "success": true,
+    "value": 0.9449730589985847,
+    "task_class": "metabolism_cla"
+  },
+  "hERG_Blockers": {
+    "success": true,
+    "value": 0.9986506550339982,
+    "task_class": "toxicity_cla"
+  },
+  "AMES_Mutagenicity": {
+    "success": true,
+    "value": 0.9991152613074519,
+    "task_class": "toxicity_cla"
+  },
+  "Drug_induced_liver_injury": {
+    "success": true,
+    "value": 0.9969749450683594,
+    "task_class": "toxicity_cla"
+  },
+  "HIA": {
+    "success": true,
+    "value": 0.05013537406921387,
+    "task_class": "absorption_cla"
+  },
+  "PAMPA": {
+    "success": true,
+    "value": 0.9955279231071472,
+    "task_class": "absorption_cla"
+  },
+  "F20%": {
+    "success": true,
+    "value": 0.029915690422058105,
+    "task_class": "absorption_cla"
+  },
+  "F30%": {
+    "success": true,
+    "value": 0.3136206865310669,
+    "task_class": "absorption_cla"
+  },
+  "F50%": {
+    "success": true,
+    "value": 0.9562538862228394,
+    "task_class": "absorption_cla"
+  },
+  "OATP1B1_inhibitor": {
+    "success": true,
+    "value": 0.9160414934158325,
+    "task_class": "absorption_cla"
+  },
+  "OATP1B3_inhibitor": {
+    "success": true,
+    "value": 0.911184549331665,
+    "task_class": "absorption_cla"
+  },
+  "MRP1_inhibitor": {
+    "success": true,
+    "value": 0.999923586845398,
+    "task_class": "absorption_cla"
+  },
+  "CYP1A2_inhibitor": {
+    "success": true,
+    "value": 0.9009808674454689,
+    "task_class": "metabolism_cla"
+  },
+  "CYP1A2_substrate": {
+    "success": true,
+    "value": 0.25610220432281494,
+    "task_class": "metabolism_cla"
+  },
+  "CYP2C19_inhibitor": {
+    "success": true,
+    "value": 0.5819924473762512,
+    "task_class": "metabolism_cla"
+  },
+  "CYP2C19_substrate": {
+    "success": true,
+    "value": 0.28684982657432556,
+    "task_class": "metabolism_cla"
+  },
+  "CYP2C9_inhibitor": {
+    "success": true,
+    "value": 0.49814796447753906,
+    "task_class": "metabolism_cla"
+  },
+  "CYP2C9_substrate": {
+    "success": true,
+    "value": 0.869881808757782,
+    "task_class": "metabolism_cla"
+  },
+  "CYP2D6_inhibitor": {
+    "success": true,
+    "value": 0.9987499680137262,
+    "task_class": "metabolism_cla"
+  },
+  "CYP2D6_substrate": {
+    "success": true,
+    "value": 0.5114758014678955,
+    "task_class": "metabolism_cla"
+  },
+  "CYP3A4_substrate": {
+    "success": true,
+    "value": 0.8812611699104309,
+    "task_class": "metabolism_cla"
+  },
+  "CYP2B6_inhibitor": {
+    "success": true,
+    "value": 0.9335848838090897,
+    "task_class": "metabolism_cla"
+  },
+  "CYP2B6_substrate": {
+    "success": true,
+    "value": 0.04801853373646736,
+    "task_class": "metabolism_cla"
+  },
+  "CYP2C8_inhibitor": {
+    "success": true,
+    "value": 0.798950731754303,
+    "task_class": "metabolism_cla"
+  },
+  "HLM_stability": {
+    "success": true,
+    "value": 0.8402562141418457,
+    "task_class": "metabolism_cla"
+  },
+  "hERG_Blockers_10um": {
+    "success": true,
+    "value": 0.9979026815854013,
+    "task_class": "toxicity_cla"
+  },
+  "ROA": {
+    "success": true,
+    "value": 0.937855064868927,
+    "task_class": "toxicity_cla"
+  },
+  "FDAMDD": {
+    "success": true,
+    "value": 0.7810387015342712,
+    "task_class": "toxicity_cla"
+  },
+  "Skin_Sensitization": {
+    "success": true,
+    "value": 0.5633615255355835,
+    "task_class": "toxicity_cla"
+  },
+  "Carcinogenicity": {
+    "success": true,
+    "value": 0.5733803510665894,
+    "task_class": "toxicity_cla"
+  },
+  "Eye_Corrosion": {
+    "success": true,
+    "value": 0.0007088282145559788,
+    "task_class": "toxicity_cla"
+  },
+  "Eye_Irritation": {
+    "success": true,
+    "value": 0.0062063611112535,
+    "task_class": "toxicity_cla"
+  },
+  "Respiratory": {
+    "success": true,
+    "value": 0.36300623416900635,
+    "task_class": "toxicity_cla"
+  },
+  "Human_Hepatotoxicity": {
+    "success": true,
+    "value": 0.9200282692909241,
+    "task_class": "toxicity_cla"
+  },
+  "Drug_induced_Neurotoxicity": {
+    "success": true,
+    "value": 0.8006755709648132,
+    "task_class": "toxicity_cla"
+  },
+  "Ototoxicity": {
+    "success": true,
+    "value": 0.9679077863693237,
+    "task_class": "toxicity_cla"
+  },
+  "Hematotoxicity": {
+    "success": true,
+    "value": 0.9576414823532104,
+    "task_class": "toxicity_cla"
+  },
+  "Drug_induced_Nephrotoxicity": {
+    "success": true,
+    "value": 0.839944064617157,
+    "task_class": "toxicity_cla"
+  },
+  "Genotoxicity": {
+    "success": true,
+    "value": 0.7702798843383789,
+    "task_class": "toxicity_cla"
+  },
+  "RPMI_8226_Immunitoxicity": {
+    "success": true,
+    "value": 0.11823216080665588,
+    "task_class": "toxicity_cla"
+  },
+  "A549_Cytotoxicity": {
+    "success": true,
+    "value": 0.1991247683763504,
+    "task_class": "toxicity_cla"
+  },
+  "Hek293_Cytotoxicity": {
+    "success": true,
+    "value": 0.5389692783355713,
+    "task_class": "toxicity_cla"
+  },
+  "NR_AhR": {
+    "success": false,
+    "value": null,
+    "task_class": "tox21_cla"
+  },
+  "NR_AR": {
+    "success": false,
+    "value": null,
+    "task_class": "tox21_cla"
+  },
+  "NR_AR_LBD": {
+    "success": false,
+    "value": null,
+    "task_class": "tox21_cla"
+  },
+  "NR_Aromatase": {
+    "success": false,
+    "value": null,
+    "task_class": "tox21_cla"
+  },
+  "NR_ER": {
+    "success": false,
+    "value": null,
+    "task_class": "tox21_cla"
+  },
+  "NR_ER_LBD": {
+    "success": false,
+    "value": null,
+    "task_class": "tox21_cla"
+  },
+  "NR_PPAR_gamma": {
+    "success": false,
+    "value": null,
+    "task_class": "tox21_cla"
+  },
+  "SR_ARE": {
+    "success": false,
+    "value": null,
+    "task_class": "tox21_cla"
+  },
+  "SR_ATAD5": {
+    "success": false,
+    "value": null,
+    "task_class": "tox21_cla"
+  },
+  "SR_HSE": {
+    "success": false,
+    "value": null,
+    "task_class": "tox21_cla"
+  },
+  "SR_MMP": {
+    "success": false,
+    "value": null,
+    "task_class": "tox21_cla"
+  },
+  "SR_p53": {
+    "success": false,
+    "value": null,
+    "task_class": "tox21_cla"
+  }
+}

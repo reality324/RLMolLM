@@ -25,6 +25,7 @@ classifiers = [
 # Core dependencies (only what rlmollm actually uses)
 dependencies = [
     "torch>=2.4.0",
+    "torch-geometric>=2.5.0",  # Required for LiTEN ADMET scoring
     "transformers>=4.50.0",
     "numpy>=1.24.3",
     "rdkit>=2024.3.3",

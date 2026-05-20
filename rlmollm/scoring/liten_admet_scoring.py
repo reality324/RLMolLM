@@ -155,9 +155,15 @@ class LiTENADMETPredictor:
         state_dict = ckpt.get('model_state_dict', ckpt)
 
         mean_t, std_t = None, None
-        if is_reg and isinstance(ckpt, dict) and 'mean' in ckpt and 'std' in ckpt:
-            mean_t = ckpt['mean'].to(self.device)
-            std_t = ckpt['std'].to(self.device)
+        if is_reg:
+            if isinstance(ckpt, dict) and 'mean' in ckpt and 'std' in ckpt:
+                mean_t = ckpt['mean'].to(self.device)
+                std_t = ckpt['std'].to(self.device)
+            else:
+                # Checkpoint doesn't have mean/std - use identity normalization
+                num_tasks = _get_num_tasks_from_ckpt(ckpt)
+                mean_t = torch.zeros(num_tasks, device=self.device)
+                std_t = torch.ones(num_tasks, device=self.device)
 
         ignore_keys = {'mean', 'std', 'epoch', 'val_avg', 'test_avg', 'test_detail'}
         clean_state_dict = {
